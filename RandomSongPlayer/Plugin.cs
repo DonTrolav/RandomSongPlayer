@@ -25,7 +25,8 @@ namespace RandomSongPlayer
     public class Plugin
     {
         internal static System.Random rnd = new System.Random();
-        internal static BeatSaver beatsaverClient = new BeatSaver(new HttpOptions(){ApplicationName = "Random Song Player",Version = new Version(1, 1, 1)});
+        internal static BeatSaver beatsaverClient = new BeatSaver(new HttpOptions(){ApplicationName = "Random Song Player", Version = new Version(1, 1, 1)});
+        internal static HttpClient client = new HttpClient();
         internal static PluginConfig config;
         internal static SeperateSongFolder randomSongsFolder;
         public static Plugin instance;
