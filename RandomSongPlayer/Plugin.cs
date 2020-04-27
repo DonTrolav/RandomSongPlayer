@@ -45,6 +45,7 @@ namespace RandomSongPlayer
             randomSongsFolder = Collections.AddSeperateSongFolder("Random Songs", Environment.CurrentDirectory + "/" + Setup.RandomSongsFolder, FolderLevelPack.NewPack, coverImage);
 
             config = cfgProvider.Generated<PluginConfig>();
+            client.Timeout = TimeSpan.FromSeconds(2);
         }
 
         [OnStart]
