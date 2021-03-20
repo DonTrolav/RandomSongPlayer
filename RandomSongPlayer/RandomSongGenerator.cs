@@ -14,12 +14,6 @@ namespace RandomSongPlayer
 {
     internal static class RandomSongGenerator
     {
-        private const string FILTER_CONFIG = "/UserData/RandomSongFilter.json";
-        private const string DEFAULT_FILTER =
-@"{
-    
-}";
-
         internal static async Task<Beatmap> GenerateRandomKey()
         {
             int tries = 0;
@@ -58,20 +52,10 @@ namespace RandomSongPlayer
         {
             Logger.log.Info("Trying to get a random filtered key");
 
-            // Load filter, do this each time so changes to the filter file will be used immediatly
-            string filterpath = Environment.CurrentDirectory + FILTER_CONFIG;
-            string filter;
-            if (!File.Exists(filterpath))
-            {
-                File.WriteAllText(filterpath, DEFAULT_FILTER);
-                filter = DEFAULT_FILTER;
-            }
-            else filter = File.ReadAllText(filterpath);
-
             try
             {
                 //send the filter (yes, the whole file) to the server
-                var content = new StringContent(filter, Encoding.UTF8, "application/json");
+                var content = new StringContent(FilterHelper.GetFilteringString(), Encoding.UTF8, "application/json");
                 string api_accesspoint = "https://rsp.bs.qwasyx3000.com/random_map";
                 var response = await Plugin.client.PostAsync(api_accesspoint, content);
                 if (response.StatusCode == HttpStatusCode.BadRequest)

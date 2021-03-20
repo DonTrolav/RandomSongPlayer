@@ -13,15 +13,15 @@ namespace RandomSongPlayer
 {
     internal static class MapInstaller
     {
-        internal static async Task<string> InstallMap(Beatmap mapData)
+        internal static async Task<(bool,string)> InstallMap(Beatmap mapData)
         {
             // Don't download if we already have the map in our playlist
             foreach (var level in Plugin.randomSongsFolder.Levels)
             {
-                if (mapData.Hash == SongCore.Collections.hashForLevelID(level.Value.levelID))
+                if (mapData.Hash.ToLower() == SongCore.Collections.hashForLevelID(level.Value.levelID).ToLower())
                 {
                     Logger.log.Info("Skipping download of map " + mapData.Key + " since we already have it");
-                    return level.Key;
+                    return (false, level.Key);
                 }
             }
 
@@ -32,10 +32,10 @@ namespace RandomSongPlayer
                 string mapPath = GetAndCreateMapDirectory(mapData);
                 if (await ExtractZip(mapData, zipData, mapPath))
                 {
-                    return mapPath;
+                    return (true, mapPath);
                 }
             }
-            return null;
+            return (false, null);
         }
 
         private static async Task<byte[]> DownloadMap(Beatmap mapData)

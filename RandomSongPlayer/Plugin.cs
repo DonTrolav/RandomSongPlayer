@@ -18,6 +18,7 @@ using RandomSongPlayer.UI;
 using BeatSaberMarkupLanguage.MenuButtons;
 using BS_Utils;
 using BeatSaverSharp;
+using System.Reflection;
 
 namespace RandomSongPlayer
 {
@@ -46,12 +47,15 @@ namespace RandomSongPlayer
 
             config = cfgProvider.Generated<PluginConfig>();
             client.Timeout = TimeSpan.FromSeconds(2);
+
+            Filter.FilterHelper.Setup();
         }
 
         [OnStart]
         public void OnApplicationStart()
         {
-            Logger.log.Info("OnApplicationStart");
+            Logger.log.Info("Starting RandomSongPlayer");
+            BeatSaberMarkupLanguage.GameplaySetup.GameplaySetup.instance.AddTab("Random Song Player", "RandomSongPlayer.UI.FilterSettings.bsml", FilterSettingsUI.instance);
             BS_Utils.Utilities.BSEvents.menuSceneLoadedFresh += BSEvents_menuSceneLoadedFresh;
         }
 
@@ -94,12 +98,6 @@ namespace RandomSongPlayer
         {
             Logger.log.Debug("OnApplicationQuit");
         }
-                
-        public void OnSceneLoaded(Scene scene, LoadSceneMode loadSceneMode)
-        {
-        }
-
-
 
         public delegate void RSPDownloadedCallback(CustomPreviewBeatmapLevel chosenSong);
 
@@ -109,20 +107,29 @@ namespace RandomSongPlayer
             Beatmap mapData = await RandomSongGenerator.GenerateRandomKey();
             if (!(mapData is null))
             {
-                string path = await MapInstaller.InstallMap(mapData);
+                string path;
+                bool freshDownload;
+                (freshDownload, path) = await MapInstaller.InstallMap(mapData);
                 Logger.log.Info("Chosen Random Song: " + path);
 
                 path = Path.GetFullPath(path);
-                // Have fun with this.
-                Action OnLevelPacksRefreshed = null;
-                OnLevelPacksRefreshed = () =>
+
+                if (freshDownload) {
+                    Action OnLevelPacksRefreshed = null;
+                    OnLevelPacksRefreshed = () =>
+                    {
+                        Loader.OnLevelPacksRefreshed -= OnLevelPacksRefreshed;
+                        CustomPreviewBeatmapLevel installedMap = randomSongsFolder.Levels[path];
+                        callback?.Invoke(installedMap);
+                    };
+                    Loader.OnLevelPacksRefreshed += OnLevelPacksRefreshed;
+                    Loader.Instance.RefreshSongs(false);
+                }
+                else
                 {
-                    Loader.OnLevelPacksRefreshed -= OnLevelPacksRefreshed;
                     CustomPreviewBeatmapLevel installedMap = randomSongsFolder.Levels[path];
                     callback?.Invoke(installedMap);
-                };
-                Loader.OnLevelPacksRefreshed += OnLevelPacksRefreshed;
-                Loader.Instance.RefreshSongs(false);
+                }
             }
         }
 

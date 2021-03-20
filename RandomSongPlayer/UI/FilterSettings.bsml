@@ -1,0 +1,64 @@
+﻿<bg xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:schemaLocation='https://monkeymanboy.github.io/BSML-Docs/ https://raw.githubusercontent.com/monkeymanboy/BSML-Docs/gh-pages/BSMLSchema.xsd'>
+  <tab-select tab-tag='rps-filter-settings' anchor-pos-y='1' size-delta-y='6' size-delta-x='-30' child-expand-width='true' has-separator='false' />
+  <tab tags='rps-filter-settings' tab-name='Basic'>
+    <horizontal id='basic-settings' child-control-width='true' size-delta-x='-10' >
+      <modifier-container child-control-width='true'>
+        <string-setting value='MinKey' apply-on-change='true' get-event='reload' text='Min Key' hover-hint='Set the minimum required key. Leave blank to allow any.'></string-setting>
+        <string-setting value='MinRating' apply-on-change='true' get-event='reload' text='Min Rating' hover-hint='Set the minimum required rating in %. Leave blank to allow any.'></string-setting>
+        <string-setting value='MinBPM' apply-on-change='true' get-event='reload' text='Min BPM' hover-hint='Set the minimum required beats per minute. Leave blank to allow any.'></string-setting>
+        <string-setting value='MinNPS' apply-on-change='true' get-event='reload' text='Min NPS' hover-hint='Set the minimum required amount of notes per second. Leave blank to allow any.'></string-setting>
+        <string-setting value='MinDuration' apply-on-change='true' get-event='reload' text='Min Duration' hover-hint='Set the minimum required duration in seconds (Warning: will not allow for some older maps to be found when set). Leave blank to allow any.'></string-setting>
+      </modifier-container>
+      <modifier-container child-control-width='true'>
+        <string-setting value='MaxKey' apply-on-change='true' get-event='reload' text='Max Key' hover-hint='Set the maximum allowed key. Leave blank to allow any.'></string-setting>
+        <string-setting value='MaxRating' apply-on-change='true' get-event='reload' text='Max Rating' hover-hint='Set the maximum allowed rating in %. Leave blank to allow any.'></string-setting>
+        <string-setting value='MaxBPM' apply-on-change='true' get-event='reload' text='Max BPM' hover-hint='Set the maximum allowed beats per minute. Leave blank to allow any.'></string-setting>
+        <string-setting value='MaxNPS' apply-on-change='true' get-event='reload' text='Max NPS' hover-hint='Set the maximum allowed amount of notes per second. Leave blank to allow any.'></string-setting>
+        <string-setting value='MaxDuration' apply-on-change='true' get-event='reload' text='Max Duration' hover-hint='Set the maximum allowed duration in seconds. Leave blank to allow any.'></string-setting>
+        </modifier-container>
+    </horizontal>
+  </tab>
+  <tab tags='rps-filter-settings' tab-name='Mode'>
+    <horizontal id='chardiff-settings' child-control-width='true' size-delta-x='-10'>
+      <modifier-container child-control-width='true'>
+        <modifier value='CharStandardToggle' apply-on-change='true' get-event='reload' text='Standard'></modifier>
+        <modifier value='CharLawlessToggle' apply-on-change='true' get-event='reload' text='Lawless'></modifier>
+        <modifier value='CharLightshowToggle' apply-on-change='true' get-event='reload' text='Lightshow'></modifier>
+        <modifier value='CharSingleSaberToggle' apply-on-change='true' get-event='reload' text='Single Saber'></modifier>
+        <modifier value='CharNoArrowsToggle' apply-on-change='true' get-event='reload' text='No Arrows'></modifier>
+      </modifier-container>
+      <modifier-container child-control-width='true'>
+        <modifier value='DiffEasyToggle' apply-on-change='true' get-event='reload' text='Easy'></modifier>
+        <modifier value='DiffNormalToggle' apply-on-change='true' get-event='reload' text='Normal'></modifier>
+        <modifier value='DiffHardToggle' apply-on-change='true' get-event='reload' text='Hard'></modifier>
+        <modifier value='DiffExpertToggle' apply-on-change='true' get-event='reload' text='Expert'></modifier>
+        <modifier value='DiffExpertplusToggle' apply-on-change='true' get-event='reload' text='Expert+'></modifier>
+      </modifier-container>
+    </horizontal>
+  </tab>
+  <tab tags='rps-filter-settings' tab-name='Advanced'>
+    <horizontal id='advanced-settings' child-control-width='true' size-delta-x='-10'>
+      <modifier-container child-control-width='true'>
+        <string-setting value='MinNJS' apply-on-change='true' get-event='reload' text='Min NJS' hover-hint='Set the minimum required notejumpspeed. Leave blank to allow any.'></string-setting>
+        <string-setting value='MinNotes' apply-on-change='true' get-event='reload' text='Min Notes' hover-hint='Set the minimum required amount of notes. Leave blank to allow any.'></string-setting>
+        <string-setting value='MinBombs' apply-on-change='true' get-event='reload' text='Min Bombs' hover-hint='Set the minimum required amount of bombs. Leave blank to allow any.'></string-setting>
+        <string-setting value='MinBPS' apply-on-change='true' get-event='reload' text='Min BPS' hover-hint='Set the minimum required amount of bombs per second. Leave blank to allow any.'></string-setting>
+        <string-setting value='MinObstacles' apply-on-change='true' get-event='reload' text='Min Obstacles' hover-hint='Set the minimum required amount of obstacles. Leave blank to allow any.'></string-setting>
+        <string-setting value='MinOPS' apply-on-change='true' get-event='reload' text='Min OPS' hover-hint='Set the minimum required amount of obstacles per second. Leave blank to allow any.'></string-setting>
+      </modifier-container>
+      <modifier-container child-control-width='true'>
+        <string-setting value='MaxNJS' apply-on-change='true' get-event='reload' text='Max NJS' hover-hint='Set the maximum allowed notejumpspeed. Leave blank to allow any.'></string-setting>
+        <string-setting value='MaxNotes' apply-on-change='true' get-event='reload' text='Max Notes' hover-hint='Set the maximum allowed amount of notes. Leave blank to allow any.'></string-setting>
+        <string-setting value='MaxBombs' apply-on-change='true' get-event='reload' text='Max Bombs' hover-hint='Set the maximum allowed amount of bombs. Leave blank to allow any.'></string-setting>
+        <string-setting value='MaxBPS' apply-on-change='true' get-event='reload' text='Max BPS' hover-hint='Set the maximum allowed amount of bombs per second. Leave blank to allow any.'></string-setting>
+        <string-setting value='MaxObstacles' apply-on-change='true' get-event='reload' text='Max Obstacles' hover-hint='Set the maximum allowed amount of obstacles. Leave blank to allow any.'></string-setting>
+        <string-setting value='MaxOPS' apply-on-change='true' get-event='reload' text='Max OPS' hover-hint='Set the maximum allowed amount of obstacles per second. Leave blank to allow any.'></string-setting>
+      </modifier-container>
+    </horizontal>
+  </tab>
+  <tab tags='rps-filter-settings' tab-name='Additional' size-delta-x='-10'>
+    <modifier-container child-control-width='true'>
+      <string-setting value='Preset' apply-on-change='true' get-event='reload' text='Preset' hover-hint="Enter a preset code here. If you don't know any just leave blank."></string-setting>
+    </modifier-container>
+  </tab>
+</bg>
