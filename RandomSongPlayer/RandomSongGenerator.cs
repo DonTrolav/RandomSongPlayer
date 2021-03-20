@@ -14,11 +14,17 @@ namespace RandomSongPlayer
 {
     internal static class RandomSongGenerator
     {
+        private const string FILTER_CONFIG = "/UserData/RandomSongFilter.json";
+        private const string SERVER_CONFIG = "/UserData/RandomSongFilterServer.txt";
+        private const string DEFAULT_FILTER =
+@"{
+    
+}";
+
         internal static async Task<Beatmap> GenerateRandomKey()
         {
             int tries = 0;
             int maxTries = 20;
-            string randomKey = null;
             Beatmap mapData = null;
 
             Logger.log.Info("Searching for random beatmap");
@@ -29,17 +35,79 @@ namespace RandomSongPlayer
             int keyAsDecimal = int.Parse(latestKey, System.Globalization.NumberStyles.HexNumber);
 
             // Randomize the key and download the map
-            if (randomKey == null)
+            while (tries < maxTries && mapData == null)
             {
-                while (tries < maxTries && mapData == null)
+                string randomKey = await GetFilteredRandomKey();
+                if (randomKey == null)
                 {
                     int randomNumber = Plugin.rnd.Next(0, keyAsDecimal + 1);
                     randomKey = randomNumber.ToString("x");
-                    mapData = await UpdateMapData(randomKey);
-                    tries++;
                 }
+
+                await UpdateMapData(randomKey);
+                tries++;
             }
             return mapData;
+        }
+
+        private static async Task<String> GetFilteredRandomKey()
+        {
+            // The filtering server is not public yet, so disable the filtering as long as the server address isn't provided
+            string serverconfigfolder = Environment.CurrentDirectory + SERVER_CONFIG;
+            if (!File.Exists(serverconfigfolder))
+                return null;
+
+
+            Logger.log.Info("Trying to get a random filtered key");
+
+            // Load filter, do this each time so changes to the filter file will be used immediatly
+            string filterpath = Environment.CurrentDirectory + FILTER_CONFIG;
+            string filter;
+            if (!File.Exists(filterpath))
+            {
+                File.WriteAllText(filterpath, DEFAULT_FILTER);
+                filter = DEFAULT_FILTER;
+            }
+            else filter = File.ReadAllText(filterpath);
+
+            try
+            {
+                //send the filter (yes, the whole file) to the server
+                var content = new StringContent(filter, Encoding.UTF8, "application/json");
+                char[] serverconfigtrim = { '\n', ' ', '\t' };
+                string api_accesspoint = File.ReadAllText(serverconfigfolder).Trim(serverconfigtrim);
+                var response = await Plugin.client.PostAsync(api_accesspoint, content);
+                if (response.StatusCode == HttpStatusCode.BadRequest)
+                {
+                    Logger.log.Warn("Random Song filters invalid; falling back to purely random songs");
+                    return null;
+                } 
+                else if (response.StatusCode != HttpStatusCode.OK)
+                {
+                    Logger.log.Info("Some other error occured while contacting the filter server; falling back to purely random songs");
+                    return null;
+                }
+
+                string responseString = await response.Content.ReadAsStringAsync();
+
+                var filteredResponse = JsonConvert.DeserializeObject<FilterServerResponse>(responseString);
+                if (filteredResponse.count == 0)
+                {
+                    Logger.log.Info("No songs with the provided filters found; falling back to purely random songs");
+                    return null;
+                }
+                return filteredResponse.key;
+            }
+            catch (HttpRequestException)
+            {
+                Logger.log.Info("Most likely could not reach the filter server; falling back to purely random songs");
+                return null;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+                return null;
+            }
         }
 
         private static async Task<Beatmap> UpdateMapData(string randomKey)
@@ -52,6 +120,7 @@ namespace RandomSongPlayer
             }
             catch (System.Net.Http.HttpRequestException ex) { Logger.log.Info("Failed to download map with key '" + randomKey + "'. Map was most likely deleted: " + ex.Message); }
             catch (Exception ex) { Logger.log.Error("Error loading MapData: " + ex.Message); }
+          
             return null;
         }
     }
