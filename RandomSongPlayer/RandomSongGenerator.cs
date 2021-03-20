@@ -30,7 +30,7 @@ namespace RandomSongPlayer
             Logger.log.Info("Searching for random beatmap");
 
             // Look for the latest key on the Beatsaver API
-            Page latestMaps = await Plugin.beatsaverClient.Latest();
+            Page<PagedRequestOptions> latestMaps = await Plugin.beatsaverClient.Latest();
             string latestKey = latestMaps.Docs[0].Key;
             int keyAsDecimal = int.Parse(latestKey, System.Globalization.NumberStyles.HexNumber);
 
@@ -115,20 +115,12 @@ namespace RandomSongPlayer
             try
             {
                 Beatmap mapData = await Plugin.beatsaverClient.Key(randomKey);
-                if (!(mapData is null))
-                {
-                    Logger.log.Info("Found map " + randomKey + ": " + mapData.Metadata.SongAuthorName + " - " + mapData.Metadata.LevelAuthorName + " by " + mapData.Metadata.LevelAuthorName);
-                }
+                if (!(mapData is null)) { Logger.log.Info("Found map " + randomKey + ": " + mapData.Metadata.SongAuthorName + " - " + mapData.Metadata.SongName + " by " + mapData.Metadata.LevelAuthorName); }
                 return mapData;
             }
-            catch (HttpRequestException)
-            {
-                Logger.log.Info("Failed to download map with key '" + randomKey + "'. Map was most likely deleted.");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.ToString());
-            }
+            catch (System.Net.Http.HttpRequestException ex) { Logger.log.Info("Failed to download map with key '" + randomKey + "'. Map was most likely deleted: " + ex.Message); }
+            catch (Exception ex) { Logger.log.Error("Error loading MapData: " + ex.Message); }
+          
             return null;
         }
     }

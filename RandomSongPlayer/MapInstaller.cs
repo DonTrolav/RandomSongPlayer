@@ -32,7 +32,7 @@ namespace RandomSongPlayer
         {
             try
             {
-                byte[] zipData = await mapData.DownloadZip();
+                byte[] zipData = await mapData.ZipBytes();
                 return zipData;
             }
             catch (Exception ex)
@@ -40,12 +40,14 @@ namespace RandomSongPlayer
                 Logger.log.Critical("Unable to download map zip: " + ex.ToString());
                 return null;
             }
-            
+
         }
 
         private static string GetMapDirectoryName(Beatmap mapData)
         {
-            return Setup.RandomSongsFolder + "/" + mapData.Key + " (" + mapData.Metadata.SongName + " - " + mapData.Metadata.LevelAuthorName + ")";
+            string basePath = mapData.Key + " (" + mapData.Metadata.SongName + " - " + mapData.Metadata.LevelAuthorName + ")";
+            basePath = string.Join("", basePath.Split((Path.GetInvalidFileNameChars().Concat(Path.GetInvalidPathChars()).ToArray())));
+            return Setup.RandomSongsFolder + "/" + basePath;
         }
 
         private static void UnzipFile(string fileName)
