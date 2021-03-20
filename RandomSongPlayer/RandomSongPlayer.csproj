@@ -107,6 +107,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Filter\FilterHelper.cs" />
     <Compile Include="Filter\FilterServerResponse.cs" />
     <Compile Include="LevelHelper.cs" />
     <Compile Include="MapInstaller.cs" />
@@ -118,6 +119,9 @@
     <Compile Include="RandomSongGenerator.cs" />
     <Compile Include="RandomSongMenu.cs" />
     <Compile Include="Setup.cs" />
+    <Compile Include="SimpleJSON.cs" />
+    <Compile Include="UI\ModifierUI.cs" />
+    <Compile Include="UI\FilterSettingsUI.cs" />
     <Compile Include="UI\RandomButtonUI.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -127,6 +131,7 @@
     <None Include="app.config" />
     <None Include="packages.config" />
     <EmbeddedResource Include="UI\RandomButton.bsml" />
+    <EmbeddedResource Include="UI\FilterSettings.bsml" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Assets\random-song-tourney-icon.png" />
