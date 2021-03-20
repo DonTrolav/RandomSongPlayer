@@ -26,13 +26,14 @@ namespace RandomSongPlayer
     public class Plugin
     {
         internal static System.Random rnd = new System.Random();
-        internal static BeatSaver beatsaverClient = new BeatSaver(new HttpOptions(){ApplicationName = "Random Song Player", Version = new Version(1, 1, 1)});
-        internal static HttpClient client = new HttpClient();
+        internal static HttpOptions options = new HttpOptions(name: "Test Client", version: new Version(1, 2, 0));
+        internal static BeatSaver beatsaverClient = new BeatSaver(options);
         internal static PluginConfig config;
         internal static SeperateSongFolder randomSongsFolder;
         public static Plugin instance;
 
-        public static IAnnotatedBeatmapLevelCollection Playlist {
+        public static IAnnotatedBeatmapLevelCollection Playlist
+        {
             get { return randomSongsFolder.LevelPack; }
         }
 
@@ -41,6 +42,7 @@ namespace RandomSongPlayer
         {
             instance = this;
             Logger.log = logger;
+            Logger.log.Info("Test: " + Environment.CurrentDirectory + "/" + Setup.RandomSongsFolder);
 
             Sprite coverImage = SongCore.Utilities.Utils.LoadSpriteFromResources("RandomSongPlayer.Assets.new-rst-logo.png");
             randomSongsFolder = Collections.AddSeperateSongFolder("Random Songs", Environment.CurrentDirectory + "/" + Setup.RandomSongsFolder, FolderLevelPack.NewPack, coverImage);
@@ -55,13 +57,14 @@ namespace RandomSongPlayer
         public void OnApplicationStart()
         {
             Logger.log.Info("Starting RandomSongPlayer");
-            BeatSaberMarkupLanguage.GameplaySetup.GameplaySetup.instance.AddTab("Random Song Player", "RandomSongPlayer.UI.FilterSettings.bsml", FilterSettingsUI.instance);
-            BS_Utils.Utilities.BSEvents.menuSceneLoadedFresh += BSEvents_menuSceneLoadedFresh;
+            BS_Utils.Utilities.BSEvents.lateMenuSceneLoadedFresh += BSEvents_lateMenuSceneLoadedFresh;
+            BS_Utils.Utilities.BSEvents.OnLoad();
         }
 
         private void _levelFilteringNavController_didSelectPackEvent(LevelFilteringNavigationController levelFilteringNavigationController, IAnnotatedBeatmapLevelCollection iAnnotatedBeatmapLevelCollection, GameObject gameObject, BeatmapCharacteristicSO beatmapCharacteristicSO)
         {
             IBeatmapLevelPack levelPack = iAnnotatedBeatmapLevelCollection as IBeatmapLevelPack;
+            Logger.log.Info(levelPack.packName);
             if (levelPack == null || levelPack.packName != "Random Songs")
             {
                 Logger.log.Info("Hiding RandomSongButton");
@@ -75,14 +78,15 @@ namespace RandomSongPlayer
             }
         }
 
-        private void BSEvents_menuSceneLoadedFresh()
+        private void BSEvents_lateMenuSceneLoadedFresh(ScenesTransitionSetupDataSO scenesTransitionSetupData)
         {
             LevelFilteringNavigationController levelFiltering = Resources.FindObjectsOfTypeAll<LevelFilteringNavigationController>().First();
             levelFiltering.didSelectAnnotatedBeatmapLevelCollectionEvent -= _levelFilteringNavController_didSelectPackEvent;
             levelFiltering.didSelectAnnotatedBeatmapLevelCollectionEvent += _levelFilteringNavController_didSelectPackEvent;
             RandomButtonUI.instance.Setup(this);
+            BeatSaberMarkupLanguage.GameplaySetup.GameplaySetup.instance.AddTab("Random Song Player", "RandomSongPlayer.UI.FilterSettings.bsml", FilterSettingsUI.instance);
 
-            try
+            /*try
             {
                 MenuButton menuButton = new MenuButton("Random Song Player", "Download a random song from Beat Saver and play it", async () => { await PlayRandomSongAsync(); });
                 MenuButtons.instance.RegisterButton(menuButton);
@@ -90,13 +94,18 @@ namespace RandomSongPlayer
             catch (Exception e)
             {
                 Console.WriteLine("Error: " + e.Message);
-            }
+            }*/
         }
 
         [OnExit]
         public void OnApplicationQuit()
         {
             Logger.log.Debug("OnApplicationQuit");
+        }
+
+        public void OnSceneLoaded(Scene scene, LoadSceneMode loadSceneMode)
+        {
+
         }
 
         public delegate void RSPDownloadedCallback(CustomPreviewBeatmapLevel chosenSong);
@@ -153,15 +162,15 @@ namespace RandomSongPlayer
 
             LevelCollectionTableView levelCollectionTable = Resources.FindObjectsOfTypeAll<LevelCollectionTableView>().First();
             var tableView = levelCollectionTable.GetPrivateField<HMUI.TableView>("_tableView");
-            tableView.ScrollToCellWithIdx(installedLevelIndex + 1, HMUI.TableViewScroller.ScrollPositionType.Center, true);
+            tableView.ScrollToCellWithIdx(installedLevelIndex + 1, HMUI.TableView.ScrollPositionType.Center, true);
             tableView.SelectCellWithIdx(installedLevelIndex + 1, true);
         }
 
         private void OnLevelPacksRefreshedPlay(CustomPreviewBeatmapLevel installedMap)
         {
-            var difficulty = (BeatmapDifficulty)Enum.Parse(typeof(BeatmapDifficulty), installedMap.standardLevelInfoSaveData.difficultyBeatmapSets.First().difficultyBeatmaps.Last().difficulty);
+            /*var difficulty = (BeatmapDifficulty)Enum.Parse(typeof(BeatmapDifficulty), installedMap.standardLevelInfoSaveData.difficultyBeatmapSets.First().difficultyBeatmaps.Last().difficulty);
 
-            LevelHelper.PlayLevel(installedMap, difficulty);
+            LevelHelper.PlayLevel(installedMap, difficulty);*/
         }
     }
 }

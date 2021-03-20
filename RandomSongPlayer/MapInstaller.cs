@@ -42,7 +42,7 @@ namespace RandomSongPlayer
         {
             try
             {
-                byte[] zipData = await mapData.DownloadZip();
+                byte[] zipData = await mapData.ZipBytes();
                 return zipData;
             }
             catch (Exception ex)
@@ -50,7 +50,7 @@ namespace RandomSongPlayer
                 Logger.log.Critical("Unable to download map zip: " + ex.ToString());
                 return null;
             }
-            
+
         }
 
         private static string GetAndCreateMapDirectory(Beatmap mapData)
