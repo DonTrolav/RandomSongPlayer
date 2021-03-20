@@ -12,7 +12,6 @@ namespace RandomSongPlayer.UI
     {
         // Plugin is RandomSongPlayer, need this value to download the map
         private Plugin plugin;
-        private LevelSelectionNavigationController levelCollection;
 
         [UIComponent("random-button")]
         internal UnityEngine.UI.Button button;
@@ -20,11 +19,23 @@ namespace RandomSongPlayer.UI
         internal void Setup(Plugin parentPlugin)
         {
             plugin = parentPlugin;
-            /*Assembly testAssembly = Assembly.GetExecutingAssembly();
-            if (testAssembly == null) Logger.log.Info("Test Assembly ist null.");
-            else Logger.log.Info("Test Assembly ist nicht null");*/
-            levelCollection = Resources.FindObjectsOfTypeAll<LevelSelectionNavigationController>().First();
-            BSMLParser.instance.Parse(BeatSaberMarkupLanguage.Utilities.GetResourceContent(Assembly.GetExecutingAssembly(), "RandomSongPlayer.UI.RandomButton.bsml"), levelCollection.gameObject, this);
+            try
+            {
+                var _levelListViewController = Resources.FindObjectsOfTypeAll<SelectLevelCategoryViewController>().Last();
+                //var iconSegmentedControl = _levelListViewController.GetField<IconSegmentedControl, SelectLevelCategoryViewController>("_levelFilterCategoryIconSegmentedControl");
+                //((RectTransform)iconSegmentedControl.transform).anchoredPosition = new Vector2(0, 4.5f);
+
+                BSMLParser.instance.Parse(BeatSaberMarkupLanguage.Utilities.GetResourceContent(Assembly.GetExecutingAssembly(), "RandomSongPlayer.UI.RandomButton.bsml"), _levelListViewController.gameObject, this);
+
+                //_requestButton.ToggleWordWrapping(false);
+                //_requestButton.SetButtonTextSize(5f);
+                //UIHelper.AddHintText(_requestButton.transform as RectTransform, "Manage the current request queue");
+                Logger.log.Info("Created RSG button!");
+            }
+            catch
+            {
+                Logger.log.Warn("Unable to create RSG button");
+            }
         }
 
         public void Show()

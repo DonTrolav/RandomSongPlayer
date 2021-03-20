@@ -9,9 +9,9 @@ using BeatSaberMarkupLanguage;
 
 namespace RandomSongPlayer
 {
-    internal class RandomSongMenu : FlowCoordinator
+    internal class RandomSongMenu //: FlowCoordinator
     {
-        private MainFlowCoordinator mainFlowCoordinator = null;
+        /*private MainFlowCoordinator mainFlowCoordinator = null;
 
         private CustomPreviewBeatmapLevel beatmap;
         private BeatmapDifficulty difficulty;
@@ -65,6 +65,6 @@ namespace RandomSongPlayer
         {
             Hide();
             LevelHelper.PlayLevel(beatmap, difficulty);
-        }
+        }*/
     }
 }
