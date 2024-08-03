@@ -544,7 +544,7 @@ namespace SimpleJSON
 
         public static JSONNode Parse(string aJSON)
         {
-            Stack<JSONNode> stack = new Stack<JSONNode>();
+            Stack stack = new Stack();
             JSONNode ctx = null;
             int i = 0;
             StringBuilder Token = new StringBuilder();
@@ -564,11 +564,11 @@ namespace SimpleJSON
                         stack.Push(new JSONObject());
                         if (ctx != null)
                         {
-                            ctx.Add(TokenName, stack.Peek());
+                            ctx.Add(TokenName, (JSONNode)stack.Peek());
                         }
                         TokenName = "";
                         Token.Length = 0;
-                        ctx = stack.Peek();
+                        ctx = (JSONNode)stack.Peek();
                         break;
 
                     case '[':
@@ -581,11 +581,11 @@ namespace SimpleJSON
                         stack.Push(new JSONArray());
                         if (ctx != null)
                         {
-                            ctx.Add(TokenName, stack.Peek());
+                            ctx.Add(TokenName, (JSONNode)stack.Peek());
                         }
                         TokenName = "";
                         Token.Length = 0;
-                        ctx = stack.Peek();
+                        ctx = (JSONNode)stack.Peek();
                         break;
 
                     case '}':
@@ -608,7 +608,7 @@ namespace SimpleJSON
                         TokenName = "";
                         Token.Length = 0;
                         if (stack.Count > 0)
-                            ctx = stack.Peek();
+                            ctx = (JSONNode)stack.Peek();
                         break;
 
                     case ':':

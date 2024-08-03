@@ -8,6 +8,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BeatSaverSharp;
+using BeatSaverSharp.Models;
+using RandomSongPlayer.Configuration;
 
 namespace RandomSongPlayer
 {
@@ -15,12 +17,11 @@ namespace RandomSongPlayer
     {
         internal static async Task<(bool,string)> InstallMap(Beatmap mapData)
         {
-            // Don't download if we already have the map in our playlist
-            foreach (var level in Plugin.randomSongsFolder.Levels)
+            foreach (var level in Plugin.RandomSongsFolder.Levels)
             {
-                if (mapData.Hash.ToLower() == SongCore.Collections.hashForLevelID(level.Value.levelID).ToLower())
+                if (mapData.LatestVersion.Hash.ToLower() == SongCore.Collections.hashForLevelID(level.Value.levelID).ToLower())
                 {
-                    Logger.log.Info("Skipping download of map " + mapData.Key + " since we already have it");
+                    Plugin.Log.Debug("Skipping download of map " + mapData.LatestVersion.Key + " since we already have it");
                     return (false, level.Key);
                 }
             }
@@ -30,7 +31,7 @@ namespace RandomSongPlayer
             if (!(zipData is null))
             {
                 string mapPath = GetAndCreateMapDirectory(mapData);
-                if (await ExtractZip(mapData, zipData, mapPath))
+                if (await ExtractZip(zipData, mapPath))
                 {
                     return (true, mapPath);
                 }
@@ -42,12 +43,12 @@ namespace RandomSongPlayer
         {
             try
             {
-                byte[] zipData = await mapData.ZipBytes();
+                byte[] zipData = await mapData.LatestVersion.DownloadZIP();
                 return zipData;
             }
             catch (Exception ex)
             {
-                Logger.log.Critical("Unable to download map zip: " + ex.ToString());
+                Plugin.Log.Critical("Unable to download map zip: " + ex.ToString());
                 return null;
             }
 
@@ -55,28 +56,20 @@ namespace RandomSongPlayer
 
         private static string GetAndCreateMapDirectory(Beatmap mapData)
         {
-            // consistent with beatsaver downloader so I guess think twice before changing anything here
-            string basePath = mapData.Key + " (" + mapData.Metadata.SongName + " - " + mapData.Metadata.LevelAuthorName + ")";
+            string basePath = mapData.ID + " (" + mapData.Metadata.SongName + " - " + mapData.Metadata.LevelAuthorName + ")";
             basePath = string.Join("", basePath.Split((Path.GetInvalidFileNameChars().Concat(Path.GetInvalidPathChars()).ToArray())));
-            string path = Setup.RandomSongsFolder + "/" + basePath;
+            string path = Path.Combine(PluginConfig.Instance.SongFolderPath, basePath);
             if (Directory.Exists(path))
             {
                 int pathNum = 1;
                 while (Directory.Exists(path + $" ({pathNum})")) ++pathNum;
                 path += $" ({pathNum})";
             }
-            if (!Directory.Exists(path))
-                Directory.CreateDirectory(path);
+            Directory.CreateDirectory(path);
             return path;
         }
 
-        private static void UnzipFile(string fileName)
-        {
-            ZipFile.ExtractToDirectory(fileName + ".zip", fileName);
-            File.Delete(fileName + ".zip");
-        }
-
-        private static async Task<bool> ExtractZip(Beatmap beatmap, byte[] zipData, string mapPath)
+        private static async Task<bool> ExtractZip(byte[] zipData, string mapPath)
         {
             Stream zipStream = new MemoryStream(zipData);
             try
@@ -87,7 +80,6 @@ namespace RandomSongPlayer
                 {
                     foreach (var entry in archive.Entries)
                     {
-                        // ignore anything in subfolder or otherwise invalid
                         var fullName = entry.FullName;
                         bool invalidFileName = false;
                         foreach (char c in Path.GetInvalidFileNameChars())
@@ -96,9 +88,9 @@ namespace RandomSongPlayer
                         if (invalidFileName) 
                             continue;
 
-                        var entryPath = Path.Combine(mapPath, entry.Name); // Name instead of FullName for better security and because song zips don't have nested directories anyway
+                        var entryPath = Path.Combine(mapPath, entry.Name);
                         
-                        if (!File.Exists(entryPath)) // Either we're overwriting or there's no existing file
+                        if (!File.Exists(entryPath))
                             entry.ExtractToFile(entryPath);
                     }
                 }).ConfigureAwait(false);
@@ -108,7 +100,7 @@ namespace RandomSongPlayer
             }
             catch (Exception ex)
             {
-                Logger.log.Critical("Unable to extract map zip: " + ex.ToString());
+                Plugin.Log.Critical("Unable to extract map zip: " + ex.ToString());
                 zipStream.Close();
                 return false;
             }

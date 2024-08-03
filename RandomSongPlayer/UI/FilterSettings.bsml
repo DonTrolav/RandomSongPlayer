@@ -1,64 +1,103 @@
 ﻿<bg xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:schemaLocation='https://monkeymanboy.github.io/BSML-Docs/ https://raw.githubusercontent.com/monkeymanboy/BSML-Docs/gh-pages/BSMLSchema.xsd'>
-  <tab-select tab-tag='rps-filter-settings' anchor-pos-y='1' size-delta-y='6' size-delta-x='-30' child-expand-width='true' has-separator='false' />
-  <tab tags='rps-filter-settings' tab-name='Basic'>
-    <horizontal id='basic-settings' child-control-width='true' size-delta-x='-10' >
-      <modifier-container child-control-width='true'>
-        <string-setting value='MinKey' apply-on-change='true' get-event='reload' text='Min Key' hover-hint='Set the minimum required key. Leave blank to allow any.'></string-setting>
-        <string-setting value='MinRating' apply-on-change='true' get-event='reload' text='Min Rating' hover-hint='Set the minimum required rating in %. Leave blank to allow any.'></string-setting>
-        <string-setting value='MinBPM' apply-on-change='true' get-event='reload' text='Min BPM' hover-hint='Set the minimum required beats per minute. Leave blank to allow any.'></string-setting>
-        <string-setting value='MinNPS' apply-on-change='true' get-event='reload' text='Min NPS' hover-hint='Set the minimum required amount of notes per second. Leave blank to allow any.'></string-setting>
-        <string-setting value='MinDuration' apply-on-change='true' get-event='reload' text='Min Duration' hover-hint='Set the minimum required duration in seconds (Warning: will not allow for some older maps to be found when set). Leave blank to allow any.'></string-setting>
+  <tab-select tab-tag='rps-filter-settings' anchor-pos-y='1' size-delta-y='6' size-delta-x='-30' child-expand-width='true'/>
+  <tab tags='rps-filter-settings' tab-name='General' child-align='TopCenter'>
+    <modal-keyboard id='filter-keyboard' on-enter='new-filter' show-event='show-keyboard' clickerino-offerino-closerino='true' clear-on-open='true'></modal-keyboard>
+    <vertical id='filterset-settings' horizontal-fit='MinSize' child-control-width='true' vertical-fit='MinSize' spacing='10' size-delta-x='-10' >
+      <horizontal child-expand-width='true' child-expand-height='true' spacing='5' horizontal-fit='MinSize'>
+        <dropdown-list-setting id='filterset-list' value='CurrentFilterSet' choices='FilterSetList' text='Current Filter Set' on-change='switch-filter' get-event='reload' min-width='60'></dropdown-list-setting>
+        <vertical id='filterset-buttons' horizontal-fit='MinSize' child-expand-width='true' vertical-fit='MinSize' spacing='5'>
+          <button id='button-newfilter' text='Create New' min-width='20' interactable='true' click-event='show-keyboard'></button>
+          <button id='button-delfilter' text='Delete' min-width='20' interactable='true' click-event='del-filter'></button>
+        </vertical>
+      </horizontal>
+      <button id='random-button' text='Generate Random Map' interactable='false' on-click='find-map'></button>
+      <text id='warning-text' text='' font-size='5' word-wrapping='true' font-align='Center'></text>
+    </vertical>
+  </tab>
+  <tab tags='rps-filter-settings' tab-name='Basic' child-align='TopCenter'>
+    <horizontal id='basic-settings' child-align='MiddleCenter' horizontal-fit='MinSize'>
+      <modifier-container preferred-width='50'>
+        <string-setting value='MinKey' apply-on-change='true' get-event='reload' text='Hex Key' align='Right' min-width='50' hover-hint='Map Set: Lowest required hexadecimal key.'></string-setting>
+        <string-setting value='MinRating' apply-on-change='true' get-event='reload' text='Rating' align='Right' min-width='50' hover-hint='Map Set: Lowest required rating (in %).'></string-setting>
+        <string-setting value='MinDuration' apply-on-change='true' get-event='reload' text='Duration' min-width='50' hover-hint='Map Set: Lowest required song duration (in seconds).'></string-setting>
+        <string-setting value='MinBPM' apply-on-change='true' get-event='reload' text='BPM' align='Right' min-width='50' hover-hint='Map Set: Lowest required beats per minute.'></string-setting>
+        <string-setting value='MinNJS' apply-on-change='true' get-event='reload' text='NJS' align='Right' min-width='50' hover-hint='Difficulty: Lowest required Note Jump Speed.'></string-setting>
       </modifier-container>
-      <modifier-container child-control-width='true'>
-        <string-setting value='MaxKey' apply-on-change='true' get-event='reload' text='Max Key' hover-hint='Set the maximum allowed key. Leave blank to allow any.'></string-setting>
-        <string-setting value='MaxRating' apply-on-change='true' get-event='reload' text='Max Rating' hover-hint='Set the maximum allowed rating in %. Leave blank to allow any.'></string-setting>
-        <string-setting value='MaxBPM' apply-on-change='true' get-event='reload' text='Max BPM' hover-hint='Set the maximum allowed beats per minute. Leave blank to allow any.'></string-setting>
-        <string-setting value='MaxNPS' apply-on-change='true' get-event='reload' text='Max NPS' hover-hint='Set the maximum allowed amount of notes per second. Leave blank to allow any.'></string-setting>
-        <string-setting value='MaxDuration' apply-on-change='true' get-event='reload' text='Max Duration' hover-hint='Set the maximum allowed duration in seconds. Leave blank to allow any.'></string-setting>
+      <modifier-container preferred-width='40'>
+        <string-setting value='MaxKey' apply-on-change='true' get-event='reload' text='-' align='Right' min-width='40' hover-hint='Map Set: Highest allowed hexadecimal key.'></string-setting>
+        <string-setting value='MaxRating' apply-on-change='true' get-event='reload' text='-' align='Right' min-width='40' hover-hint='Map Set: Highest allowed rating (in %).'></string-setting>
+        <string-setting value='MaxDuration' apply-on-change='true' get-event='reload' text='-' align='Right' min-width='40' hover-hint='Map Set: Highest allowed song duration (in seconds).'></string-setting>
+        <string-setting value='MaxBPM' apply-on-change='true' get-event='reload' text='-' align='Right' min-width='40' hover-hint='Map Set: Highest allowed beats per minute.'></string-setting>
+        <string-setting value='MaxNJS' apply-on-change='true' get-event='reload' text='-' align='Right' min-width='40' hover-hint='Difficulty: Highest allowed Note Jump Speed.'></string-setting>
         </modifier-container>
     </horizontal>
   </tab>
-  <tab tags='rps-filter-settings' tab-name='Mode'>
-    <horizontal id='chardiff-settings' child-control-width='true' size-delta-x='-10'>
-      <modifier-container child-control-width='true'>
-        <modifier value='CharStandardToggle' apply-on-change='true' get-event='reload' text='Standard'></modifier>
-        <modifier value='CharLawlessToggle' apply-on-change='true' get-event='reload' text='Lawless'></modifier>
-        <modifier value='CharLightshowToggle' apply-on-change='true' get-event='reload' text='Lightshow'></modifier>
-        <modifier value='CharSingleSaberToggle' apply-on-change='true' get-event='reload' text='Single Saber'></modifier>
-        <modifier value='CharNoArrowsToggle' apply-on-change='true' get-event='reload' text='No Arrows'></modifier>
+  <tab tags='rps-filter-settings' tab-name='Objects' child-align='TopCenter'>
+    <horizontal id='advanced-settings' child-align='MiddleCenter' horizontal-fit='MinSize'>
+      <modifier-container preferred-width='50'>
+        <string-setting value='MinNotes' apply-on-change='true' get-event='reload' text='Notes' align='Right' min-width='50' hover-hint='Difficulty: Lowest required amount of notes.'></string-setting>
+        <string-setting value='MinNPS' apply-on-change='true' get-event='reload' text='NPS' align='Right' min-width='50' hover-hint='Difficulty: Lowest required notes per second.'></string-setting>
+        <string-setting value='MinBombs' apply-on-change='true' get-event='reload' text='Bombs' align='Right' min-width='50' hover-hint='Difficulty: Lowest required amount of bombs.'></string-setting>
+        <string-setting value='MinBPS' apply-on-change='true' get-event='reload' text='BPS' align='Right' min-width='50' hover-hint='Difficulty: Lowest required bombs per second.'></string-setting>
+        <string-setting value='MinObstacles' apply-on-change='true' get-event='reload' text='Obstacles' align='Right' min-width='50' hover-hint='Difficulty: Lowest required amount of obstacles.'></string-setting>
+        <string-setting value='MinOPS' apply-on-change='true' get-event='reload' text='OPS' align='Right' min-width='50' hover-hint='Difficulty: Lowest required obstacles per second.'></string-setting>
       </modifier-container>
-      <modifier-container child-control-width='true'>
-        <modifier value='DiffEasyToggle' apply-on-change='true' get-event='reload' text='Easy'></modifier>
-        <modifier value='DiffNormalToggle' apply-on-change='true' get-event='reload' text='Normal'></modifier>
-        <modifier value='DiffHardToggle' apply-on-change='true' get-event='reload' text='Hard'></modifier>
-        <modifier value='DiffExpertToggle' apply-on-change='true' get-event='reload' text='Expert'></modifier>
-        <modifier value='DiffExpertplusToggle' apply-on-change='true' get-event='reload' text='Expert+'></modifier>
-      </modifier-container>
-    </horizontal>
-  </tab>
-  <tab tags='rps-filter-settings' tab-name='Advanced'>
-    <horizontal id='advanced-settings' child-control-width='true' size-delta-x='-10'>
-      <modifier-container child-control-width='true'>
-        <string-setting value='MinNJS' apply-on-change='true' get-event='reload' text='Min NJS' hover-hint='Set the minimum required notejumpspeed. Leave blank to allow any.'></string-setting>
-        <string-setting value='MinNotes' apply-on-change='true' get-event='reload' text='Min Notes' hover-hint='Set the minimum required amount of notes. Leave blank to allow any.'></string-setting>
-        <string-setting value='MinBombs' apply-on-change='true' get-event='reload' text='Min Bombs' hover-hint='Set the minimum required amount of bombs. Leave blank to allow any.'></string-setting>
-        <string-setting value='MinBPS' apply-on-change='true' get-event='reload' text='Min BPS' hover-hint='Set the minimum required amount of bombs per second. Leave blank to allow any.'></string-setting>
-        <string-setting value='MinObstacles' apply-on-change='true' get-event='reload' text='Min Obstacles' hover-hint='Set the minimum required amount of obstacles. Leave blank to allow any.'></string-setting>
-        <string-setting value='MinOPS' apply-on-change='true' get-event='reload' text='Min OPS' hover-hint='Set the minimum required amount of obstacles per second. Leave blank to allow any.'></string-setting>
-      </modifier-container>
-      <modifier-container child-control-width='true'>
-        <string-setting value='MaxNJS' apply-on-change='true' get-event='reload' text='Max NJS' hover-hint='Set the maximum allowed notejumpspeed. Leave blank to allow any.'></string-setting>
-        <string-setting value='MaxNotes' apply-on-change='true' get-event='reload' text='Max Notes' hover-hint='Set the maximum allowed amount of notes. Leave blank to allow any.'></string-setting>
-        <string-setting value='MaxBombs' apply-on-change='true' get-event='reload' text='Max Bombs' hover-hint='Set the maximum allowed amount of bombs. Leave blank to allow any.'></string-setting>
-        <string-setting value='MaxBPS' apply-on-change='true' get-event='reload' text='Max BPS' hover-hint='Set the maximum allowed amount of bombs per second. Leave blank to allow any.'></string-setting>
-        <string-setting value='MaxObstacles' apply-on-change='true' get-event='reload' text='Max Obstacles' hover-hint='Set the maximum allowed amount of obstacles. Leave blank to allow any.'></string-setting>
-        <string-setting value='MaxOPS' apply-on-change='true' get-event='reload' text='Max OPS' hover-hint='Set the maximum allowed amount of obstacles per second. Leave blank to allow any.'></string-setting>
+      <modifier-container preferred-width='40'>
+        <string-setting value='MaxNotes' apply-on-change='true' get-event='reload' text='-' align='Right' min-width='40' hover-hint='Difficulty: Highest allowed amount of notes.'></string-setting>
+        <string-setting value='MaxNPS' apply-on-change='true' get-event='reload' text='-' align='Right' min-width='40' hover-hint='Difficulty: Highest allowed notes per second.'></string-setting>
+        <string-setting value='MaxBombs' apply-on-change='true' get-event='reload' text='-' align='Right' min-width='40' hover-hint='Difficulty: Highest allowed amount of bombs.'></string-setting>
+        <string-setting value='MaxBPS' apply-on-change='true' get-event='reload' text='-' align='Right' min-width='40' hover-hint='Difficulty: Highest allowed bombs per second.'></string-setting>
+        <string-setting value='MaxObstacles' apply-on-change='true' get-event='reload' text='-' align='Right' min-width='40' hover-hint='Difficulty: Highest allowed amount of obstacles.'></string-setting>
+        <string-setting value='MaxOPS' apply-on-change='true' get-event='reload' text='-' align='Right' min-width='40' hover-hint='Difficulty: Highest allowed obstacles per second.'></string-setting>
       </modifier-container>
     </horizontal>
   </tab>
-  <tab tags='rps-filter-settings' tab-name='Additional' size-delta-x='-10'>
-    <modifier-container child-control-width='true'>
-      <string-setting value='Preset' apply-on-change='true' get-event='reload' text='Preset' hover-hint="Enter a preset code here. If you don't know any just leave blank."></string-setting>
-    </modifier-container>
+  <tab tags='rps-filter-settings' tab-name='Mode' child-align='TopCenter'>
+	  <horizontal>
+		  <vertical>
+			  <text text='Characteristic' align='Center'></text>
+			  <toggle-setting value='CharStandardToggle' apply-on-change='true' get-event='reload' min-width='35' pref-width='35' text='Standard'></toggle-setting>
+			  <toggle-setting value='CharSingleSaberToggle' apply-on-change='true' get-event='reload' min-width='35' pref-width='35' text='Single Saber'></toggle-setting>
+			  <toggle-setting value='CharNoArrowsToggle' apply-on-change='true' get-event='reload' min-width='35' pref-width='35' text='No Arrows'></toggle-setting>
+			  <toggle-setting value='CharLawlessToggle' apply-on-change='true' get-event='reload' min-width='35' pref-width='35' text='Lawless'></toggle-setting>
+			  <toggle-setting value='Char90DegreeToggle' apply-on-change='true' get-event='reload' min-width='35' pref-width='35' text='90 Degree'></toggle-setting>
+			  <toggle-setting value='Char360DegreeToggle' apply-on-change='true' get-event='reload' min-width='35' pref-width='35' text='360 Degree'></toggle-setting>
+			  <toggle-setting value='CharLightshowToggle' apply-on-change='true' get-event='reload' min-width='35' pref-width='35' text='Lightshow'></toggle-setting>
+		  </vertical>
+		  <vertical>
+			  <text text='Difficulty' align='Center'></text>
+			  <toggle-setting value='DiffEasyToggle' apply-on-change='true' get-event='reload' min-width='35' pref-width='35' text='Easy'></toggle-setting>
+			  <toggle-setting value='DiffNormalToggle' apply-on-change='true' get-event='reload' min-width='35' pref-width='35' text='Normal'></toggle-setting>
+			  <toggle-setting value='DiffHardToggle' apply-on-change='true' get-event='reload' min-width='35' pref-width='35' text='Hard'></toggle-setting>
+			  <toggle-setting value='DiffExpertToggle' apply-on-change='true' get-event='reload' min-width='35' pref-width='35' text='Expert'></toggle-setting>
+			  <toggle-setting value='DiffExpertplusToggle' apply-on-change='true' get-event='reload' min-width='35' pref-width='35' text='Expert+'></toggle-setting>
+		  </vertical>
+		  <vertical>
+			  <text text='Mods' align='Center'></text>
+			  <toggle-setting value='ModNoodleextensionsToggle' apply-on-change='true' get-event='reload' min-width='35' pref-width='35' text='Noodle Extensions'></toggle-setting>
+			  <toggle-setting value='ModMappingextensionsToggle' apply-on-change='true' get-event='reload' min-width='35' pref-width='35' text='Mapping Extensions'></toggle-setting>
+			  <toggle-setting value='ModChromaToggle' apply-on-change='true' get-event='reload' min-width='35' pref-width='35' text='Chroma'></toggle-setting>
+			  <toggle-setting value='ModCinemaToggle' apply-on-change='true' get-event='reload' min-width='35' pref-width='35' text='Cinema'></toggle-setting>
+		  </vertical>
+		  <vertical>
+		  </vertical>
+	  </horizontal>
+  </tab>
+  <tab tags='rps-filter-settings' tab-name='Extra' child-align='TopCenter'>
+    <vertical id='extra-settings' child-align='MiddleCenter'>
+      <horizontal id ='stars-settings'>
+        <modifier-container preferred-width='70' child-align='MiddleRight'>
+            <string-setting value='MinStarsScoreSaber' apply-on-change='true' get-event='reload' text='ScoreSaber Stars' align='Right' min-width='70' hover-hint='Difficulty: Lowest required ScoreSaber star rating.'></string-setting>
+            <string-setting value='MinStarsBeatLeader' apply-on-change='true' get-event='reload' text='BeatLeader Stars' align='Right' min-width='70' hover-hint='Difficulty: Lowest required BeatLeader star rating.'></string-setting>
+        </modifier-container>
+        <modifier-container preferred-width='40' child-align='MiddleLeft'>
+            <string-setting value='MaxStarsScoreSaber' apply-on-change='true' get-event='reload' text='-' align='Left' min-width='40' hover-hint='Difficulty: Highest allowed ScoreSaber star rating.'></string-setting>
+            <string-setting value='MaxStarsBeatLeader' apply-on-change='true' get-event='reload' text='-' align='Left' min-width='40' hover-hint='Difficulty: Highest allowed BeatLeader star rating.'></string-setting>
+        </modifier-container>
+      </horizontal>
+      <modifier-container preferred-width='50' pad-left='30' pad-right='30'>
+        <string-setting value='Preset' apply-on-change='true' get-event='reload' text='Server Preset' pref-width='50' hover-hint="Enter a preset code here. If you don't know any, just Leave this blank."></string-setting>
+      </modifier-container>
+    </vertical>
   </tab>
 </bg>
