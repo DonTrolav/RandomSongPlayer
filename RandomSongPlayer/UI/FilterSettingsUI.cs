@@ -326,16 +326,16 @@ namespace RandomSongPlayer.UI
         {
             findMapButton.interactable = false;
             await MapSelector.SelectRandomSongAsync();
-            if (RandomSongGenerator.initialCache is null)
+            if (RandomSongGenerator.InitialCache is null)
             {
                 ChangeWarning("Something went wrong!", COLOR_RED);
                 findMapButton.interactable = true;
             }
-            else if (RandomSongGenerator.initialCache.count == 0)
+            else if (RandomSongGenerator.InitialCache.count == 0)
             {
                 ChangeWarning("Could not find a map using these filters!", COLOR_ORANGE);
             }
-            else if (RandomSongGenerator.haveFullList && RandomSongGenerator.cacheList.Count == 0)
+            else if (RandomSongGenerator.AllMapsInCache && RandomSongGenerator.CurrentCache.Count == 0)
             {
                 ChangeWarning("All maps with this filter have been used.", COLOR_YELLOW);
                 findMapButton.interactable = true;

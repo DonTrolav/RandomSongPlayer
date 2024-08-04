@@ -17,84 +17,28 @@ namespace RandomSongPlayer
 {
     internal static class RandomSongGenerator
     {
+        internal static bool AllMapsInCache { get; private set; } = false;
+        internal static FilterResponse InitialCache { get; private set; } = null;
+        internal static List<FilteredMap> CurrentCache { get; private set; } = null;
+
         private static string lastRequest = string.Empty;
-        internal static bool haveFullList = false;
-        internal static FilterResponse initialCache = null;
-        internal static List<FilteredMap> cacheList = null;
         private static readonly Random rnjesus = new Random();
 
         internal static async Task<(Beatmap, string)> GenerateRandomMap()
         {
             Plugin.Log.Info("Searching for random beatmap");
-
-            // Fill Cache
-            #region FillCache
             string newRequest = FilterHelper.GetActiveFilteringString();
-            Plugin.Log.Debug("Filter: " + newRequest);
-            if (!HasElementsLeft(cacheList) && lastRequest == newRequest && haveFullList)
-            {
-                cacheList = initialCache.maps.ToList();
-            }
-            else if (newRequest != lastRequest || !haveFullList)
-            {
-                FilterResponse tempResponse = null;
-                if (DoINeedTheServer(FilterHelper.CurrentFilterSet))
-                {
-                    tempResponse = await FillCacheFromServer(newRequest);
-                }
-                if (tempResponse is null)
-                {
-                    haveFullList = true;
-                    initialCache = FillCacheFromLocal(FilterHelper.CurrentFilterSet);
-                }
-                else
-                {
-                    initialCache = tempResponse;
-                    haveFullList = (initialCache.count == initialCache.maps.Count);
-                }
-                cacheList = initialCache.maps.ToList();
-            }
-            #endregion
+
+            await FillCache(newRequest);
             lastRequest = newRequest;
 
-            // Find map
-            #region FindMap
-            Beatmap mapData = null;
-            string charDiff = null;
-            if (initialCache.count == 0)
-            {
-                Plugin.Log.Info("Could not find a map with these filters!");
-            }
-            else
-            {
-                while (mapData == null && cacheList.Count > 0)
-                {
-                    int index = rnjesus.Next(cacheList.Count);
-                    FilteredMap chosenMap = cacheList[index];
-                    string randomKey = chosenMap.key;
-
-                    List<string> diffsToChooseFrom = chosenMap.diffs;
-                    int diffCount = diffsToChooseFrom.Count();
-                    if (diffCount > 0) 
-                        charDiff = diffsToChooseFrom[rnjesus.Next(diffCount)];
-
-                    cacheList.RemoveAt(index);
-
-                    mapData = await UpdateMapData(randomKey);
-                }
-                if (cacheList.Count == 0 && mapData is null)
-                {
-                    Plugin.Log.Info("Could not find a valid map!");
-                }
-            }
-            #endregion
-
-            return (mapData, charDiff);
+            return await FindMap();
         }
 
-        private static bool DoINeedTheServer(JSONNode currentFilterSet)
+
+        private static bool FilterServerIsNeeded(JSONNode currentFilterSet)
         {
-            foreach (var x in currentFilterSet)
+            foreach(var x in currentFilterSet)
             {
                 if (!FilterHelper.NATIVE_FILTERS.Contains(x.Key))
                 {
@@ -104,20 +48,44 @@ namespace RandomSongPlayer
             return false;
         }
 
-        private static bool HasElementsLeft(List<FilteredMap> cache)
+        #region FillCache
+        private static async Task FillCache(string newRequest)
         {
-            if (cache is null)
-                return false;
+            Plugin.Log.Debug("Old Filter: " + lastRequest);
+            Plugin.Log.Debug("New Filter: " + newRequest);
+            if (newRequest != lastRequest || !AllMapsInCache)
+            {
+                InitialCache = null;
+                CurrentCache = null;
+                if (FilterServerIsNeeded(FilterHelper.CurrentFilterSet))
+                {
+                    // If the server is needed, fill cache from Server
+                    InitialCache = await FillCacheFromServer(newRequest);
+                }
 
-            if (cache.Count == 0) 
-                return false;
-                
-            return true;
+                if (InitialCache is null)
+                {
+                    // If the server is not needed or doesn't respond, use local filtering
+                    InitialCache = FillCacheFromLocal(FilterHelper.CurrentFilterSet);
+                }
+
+                AllMapsInCache = (InitialCache.count == InitialCache.maps.Count);
+            }
+
+            if (CurrentCache is null || CurrentCache.Count == 0)
+            {
+                CurrentCache = InitialCache.maps.ToList();
+            }
         }
 
         private static FilterResponse FillCacheFromLocal(JSONNode currentFilterSet)
         {
-            FilterResponse response;
+            FilterResponse response = new FilterResponse
+            {
+                count = 0,
+                maps = new List<FilteredMap>()
+            };
+
             var sw = Stopwatch.StartNew();
             IEnumerable<Song> songsToSearch = Plugin.SongDetails.songs;
             Plugin.Log.Info("Original song count: " + songsToSearch.Count().ToString());
@@ -126,63 +94,25 @@ namespace RandomSongPlayer
             IEnumerable<SongDifficulty> difficultiesToSearch = songsToSearch.Where(x => songFilter.CheckFilter(x)).SelectMany(x => x.difficulties);
            
             if (difficultiesToSearch.Count() == 0)
+                return response;
+
+            Plugin.Log.Debug("Original diff count: " + difficultiesToSearch.Count().ToString());
+            LocalDiffFilter difficultyFilter = new LocalDiffFilter(currentFilterSet);
+
+            IEnumerable<IGrouping<Song, SongDifficulty>> foundSongs = difficultiesToSearch.Where(x => difficultyFilter.CheckFilter(x)).GroupBy(x => x.song);
+            Plugin.Log.Info($"Found songs: {foundSongs.Count()} (in {sw.ElapsedMilliseconds}ms)");
+
+            response.count = difficultiesToSearch.Count();
+            foreach (var group in foundSongs)
             {
-                 response = new FilterResponse
-                 {
-                     count = 0,
-                     maps = new List<FilteredMap>()
-                 };
-            }
-            else
-            {
-                Plugin.Log.Debug("Original diff count: " + difficultiesToSearch.Count().ToString());
-                LocalDiffFilter difficultyFilter = new LocalDiffFilter(currentFilterSet);
-
-                IEnumerable<IGrouping<Song, SongDifficulty>> foundSongs = difficultiesToSearch.Where(x => difficultyFilter.CheckFilter(x)).GroupBy(x => x.song);
-                Plugin.Log.Info($"Found songs: {foundSongs.Count()} (in {sw.ElapsedMilliseconds}ms)");
-
-                response = new FilterResponse
+                response.maps.Add(new FilteredMap
                 {
-                    count = difficultiesToSearch.Count(),
-                    maps = new List<FilteredMap>()
-                };
-
-                foreach (var group in foundSongs)
-                {
-                    var tempMap = new FilteredMap
-                    {
-                        hash = group.Key.hash,
-                        key = group.Key.key,
-                        diffs = group.Select(x => CharacteristicToLowerString(x.characteristic) + x.difficulty.ToString().ToLower()).ToList()
-                    };
-                    response.maps.Add(tempMap);
-                }
+                    hash = group.Key.hash,
+                    key = group.Key.key,
+                    diffs = group.Select(x => CharacteristicToLowerString(x.characteristic) + x.difficulty.ToString().ToLower()).ToList()
+                });
             }
             return response;
-        }
-
-        private static string CharacteristicToLowerString(MapCharacteristic characteristic)
-        {
-            switch (characteristic)
-            {
-                case MapCharacteristic.Standard:
-                    return "standard";
-                case MapCharacteristic.OneSaber:
-                    return "onesaber";
-                case MapCharacteristic.NoArrows:
-                    return "noarrows";
-                case MapCharacteristic.NinetyDegree:
-                    return "90degree";
-                case MapCharacteristic.ThreeSixtyDegree:
-                    return "360degree";
-                case MapCharacteristic.Lightshow:
-                    return "lightshow";
-                case MapCharacteristic.Lawless:
-                    return "lawless";
-                case MapCharacteristic.Custom:
-                default:
-                    return "custom";
-            }
         }
 
         private static async Task<FilterResponse> FillCacheFromServer(string filterString)
@@ -191,7 +121,6 @@ namespace RandomSongPlayer
 
             try
             {
-                //send the filter (yes, the whole file) to the server
                 var content = new StringContent(filterString, Encoding.UTF8, "application/json");
                 var response = await Plugin.HttpClient.PostAsync(PluginConfig.Instance.FilterServerAddress, content);
                 if (response.StatusCode == HttpStatusCode.BadRequest)
@@ -226,19 +155,85 @@ namespace RandomSongPlayer
                 return null;
             }
         }
+        #endregion
+
+        #region FindMap
+        private static async Task<(Beatmap, string)> FindMap()
+        {
+            if (InitialCache.count == 0)
+            {
+                Plugin.Log.Info("Could not find a map with these filters!");
+                return (null, null);
+            }
+
+            while (CurrentCache.Count > 0)
+            {
+                int index = rnjesus.Next(CurrentCache.Count);
+                FilteredMap chosenMap = CurrentCache[index];
+                string randomKey = chosenMap.key;
+                string charDiff = string.Empty;
+
+                List<string> diffsToChooseFrom = chosenMap.diffs;
+                int diffCount = diffsToChooseFrom.Count();
+                if (diffCount > 0)
+                    charDiff = diffsToChooseFrom[rnjesus.Next(diffCount)];
+
+                CurrentCache.RemoveAt(index);
+
+                Beatmap mapData = await UpdateMapData(randomKey);
+                if (!(mapData is null) && charDiff.Length > 0)
+                    return (mapData, charDiff);
+            }
+
+            Plugin.Log.Info("Could not find a valid map!");
+            return (null, null);
+        }
 
         private static async Task<Beatmap> UpdateMapData(string randomKey)
         {
             try
             {
                 Beatmap mapData = await Plugin.BeatsaverClient.Beatmap(randomKey);
-                if (!(mapData is null)) { Plugin.Log.Info("Found map " + randomKey + ": " + mapData.Metadata.SongAuthorName + " - " + mapData.Metadata.SongName + " by " + mapData.Metadata.LevelAuthorName); }
+                if (!(mapData is null))
+                    Plugin.Log.Info("Found map " + randomKey + ": " + mapData.Metadata.SongAuthorName + " - " + mapData.Metadata.SongName + " by " + mapData.Metadata.LevelAuthorName);
                 return mapData;
             }
-            catch (HttpRequestException ex) { Plugin.Log.Info("Failed to download map with key '" + randomKey + "'. Map was most likely deleted: " + ex.Message); }
-            catch (Exception ex) { Plugin.Log.Error("Error loading MapData: " + ex.Message); }
-          
+            catch (HttpRequestException ex)
+            {
+                Plugin.Log.Info("Failed to download map with key '" + randomKey + "'. Map was most likely deleted: " + ex.Message);
+            }
+            catch (Exception ex)
+            {
+                Plugin.Log.Error("Error loading MapData: " + ex.Message);
+            }
+
             return null;
+        }
+        #endregion
+
+
+        private static string CharacteristicToLowerString(MapCharacteristic characteristic)
+        {
+            switch (characteristic)
+            {
+                case MapCharacteristic.Standard:
+                    return "standard";
+                case MapCharacteristic.OneSaber:
+                    return "onesaber";
+                case MapCharacteristic.NoArrows:
+                    return "noarrows";
+                case MapCharacteristic.NinetyDegree:
+                    return "90degree";
+                case MapCharacteristic.ThreeSixtyDegree:
+                    return "360degree";
+                case MapCharacteristic.Lightshow:
+                    return "lightshow";
+                case MapCharacteristic.Lawless:
+                    return "lawless";
+                case MapCharacteristic.Custom:
+                default:
+                    return "custom";
+            }
         }
     }
 }
