@@ -1,15 +1,12 @@
-﻿using BeatSaverSharp.Models;
-using HMUI;
-using IPA.Utilities;
-using RandomSongPlayer.UI;
-using SongCore;
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
+using HMUI;
+using SongCore;
+using RandomSongPlayer.UI;
+using BeatSaverSharp.Models;
 
 namespace RandomSongPlayer
 {
@@ -17,9 +14,9 @@ namespace RandomSongPlayer
     {
         private static BeatmapCharacteristicSO selectThisCharacteristic = null;
         private static BeatmapDifficulty selectThisDifficulty = BeatmapDifficulty.Easy;
-        private static IPreviewBeatmapLevel beatmapCheck = null;
+        private static BeatmapLevel beatmapCheck = null;
 
-        private delegate void RSPDownloadedCallback(CustomPreviewBeatmapLevel chosenSong, string chosenCharDiff);
+        private delegate void RSPDownloadedCallback(BeatmapLevel chosenSong, string chosenCharDiff);
 
         private static async Task DownloadRandomSongAsync(RSPDownloadedCallback callback)
         {
@@ -45,7 +42,7 @@ namespace RandomSongPlayer
                 void OnLevelPacksRefreshed()
                 {
                     Loader.OnLevelPacksRefreshed -= OnLevelPacksRefreshed;
-                    CustomPreviewBeatmapLevel installedMap = Plugin.RandomSongsFolder.Levels[path];
+                    BeatmapLevel installedMap = Plugin.RandomSongsFolder.Levels[path];
                     callback?.Invoke(installedMap, charDiff);
                 }
 
@@ -54,7 +51,7 @@ namespace RandomSongPlayer
             }
             else
             {
-                CustomPreviewBeatmapLevel installedMap = Plugin.RandomSongsFolder.Levels[path];
+                BeatmapLevel installedMap = Plugin.RandomSongsFolder.Levels[path];
                 callback?.Invoke(installedMap, charDiff);
             }
         }
@@ -64,16 +61,12 @@ namespace RandomSongPlayer
             await DownloadRandomSongAsync(SelectBeatmap);
         }
 
-        private static void SelectBeatmap(CustomPreviewBeatmapLevel installedMap, string charDiff)
+        private static void SelectBeatmap(BeatmapLevel installedMap, string charDiff)
         {
-            int installedLevelIndex = Plugin.RandomSongsFolder.LevelPack.beatmapLevelCollection.beatmapLevels.Select((item, index) => new { item, index }).FirstOrDefault(x => x.item.levelID == installedMap.levelID).index;
+            int installedLevelIndex = Plugin.RandomSongsFolder.LevelPack.beatmapLevels.Select((item, index) => new { item, index }).FirstOrDefault(x => x.item.levelID == installedMap.levelID).index;
             Plugin.Log.Debug($"Installed Level Index: {installedLevelIndex}");
 
-            // Dismiss PracticeViewController if it's active
-            LevelSelectionFlowCoordinator levelFlowCoordinator = Resources.FindObjectsOfTypeAll<LevelSelectionFlowCoordinator>().FirstOrDefault(); ;
-            PracticeViewController practivePreview = Resources.FindObjectsOfTypeAll<PracticeViewController>().FirstOrDefault();
-            if (practivePreview != null && practivePreview.isActiveAndEnabled && levelFlowCoordinator != null)
-                levelFlowCoordinator.DismissViewController(practivePreview, ViewController.AnimationDirection.Horizontal, null, true);
+            DismissPracticeView();
 
             LevelFilteringNavigationController levelNavigation = Resources.FindObjectsOfTypeAll<LevelFilteringNavigationController>().First();
             SelectLevelCategoryViewController levelSelector = levelNavigation._selectLevelCategoryViewController;
@@ -82,54 +75,72 @@ namespace RandomSongPlayer
             levelNavigation._levelPackIdToBeSelectedAfterPresent = Plugin.RandomSongsFolder.LevelPack.packID;
             levelNavigation.UpdateSecondChildControllerContent(levelSelector.selectedLevelCategory);
 
-            PreviewDifficultyBeatmapSet previewDifficultyBeatmapSet = installedMap.previewDifficultyBeatmapSets.Where(x => x.beatmapDifficulties.Any(y => x.beatmapCharacteristic.serializedName.ToLower() + y.ToString().ToLower() == charDiff)).FirstOrDefault();
+            (selectThisCharacteristic, selectThisDifficulty) = SearchDiffInInstalledMap(installedMap, charDiff);
             levelDetails.didChangeContentEvent -= SelectCharacteristicAndDifficulty;
-            if (previewDifficultyBeatmapSet != null)
+            if (selectThisCharacteristic is null)
             {
-                selectThisCharacteristic = previewDifficultyBeatmapSet.beatmapCharacteristic;
-                selectThisDifficulty = previewDifficultyBeatmapSet.beatmapDifficulties.Where(x => charDiff.EndsWith(x.ToString().ToLower())).First();
-                beatmapCheck = installedMap;
-                levelDetails.didChangeContentEvent += SelectCharacteristicAndDifficulty;
+                beatmapCheck = null;
             }
             else
             {
-                selectThisCharacteristic = null;
-                selectThisDifficulty = BeatmapDifficulty.Easy;
-                beatmapCheck = null;
+                beatmapCheck = installedMap;
+                levelDetails.didChangeContentEvent += SelectCharacteristicAndDifficulty;
             }
 
             LevelCollectionTableView levelCollectionTable = Resources.FindObjectsOfTypeAll<LevelCollectionTableView>().First();
             levelCollectionTable.SelectLevel(installedMap);
         }
 
-        private static void SelectCharacteristicAndDifficulty(StandardLevelDetailViewController sLDVC, StandardLevelDetailViewController.ContentType cT)
+        private static void DismissPracticeView()
         {
-            if (sLDVC?.beatmapLevel is null)
+            // Dismiss PracticeViewController if it's active
+            LevelSelectionFlowCoordinator levelFlowCoordinator = Resources.FindObjectsOfTypeAll<LevelSelectionFlowCoordinator>().FirstOrDefault();
+            PracticeViewController practivePreview = Resources.FindObjectsOfTypeAll<PracticeViewController>().FirstOrDefault();
+            if (practivePreview != null && practivePreview.isActiveAndEnabled && levelFlowCoordinator != null)
+                levelFlowCoordinator.DismissViewController(practivePreview, ViewController.AnimationDirection.Horizontal, null, true);
+        }
+
+        private static (BeatmapCharacteristicSO, BeatmapDifficulty) SearchDiffInInstalledMap(BeatmapLevel installedMap, string charDiff)
+        {
+            foreach (var characteristic in installedMap.GetCharacteristics())
+            {
+                foreach (var difficulty in installedMap.GetDifficulties(characteristic))
+                {
+                    if (characteristic.serializedName.ToLower() + difficulty.ToString().ToLower() == charDiff)
+                        return (characteristic, difficulty);
+                }
+            }
+            return (null, BeatmapDifficulty.Easy);
+        }
+
+        private static void SelectCharacteristicAndDifficulty(StandardLevelDetailViewController levelDetailView, StandardLevelDetailViewController.ContentType contentType)
+        {
+            if (levelDetailView?.beatmapLevel is null)
                 return;
-            if (sLDVC.beatmapLevel.levelID != beatmapCheck?.levelID || cT != StandardLevelDetailViewController.ContentType.OwnedAndReady)
+            if (levelDetailView.beatmapLevel.levelID != beatmapCheck?.levelID || contentType != StandardLevelDetailViewController.ContentType.OwnedAndReady)
                 return;
-            sLDVC.didChangeContentEvent -= SelectCharacteristicAndDifficulty;
-            StandardLevelDetailView sLDV = sLDVC._standardLevelDetailView;
+            levelDetailView.didChangeContentEvent -= SelectCharacteristicAndDifficulty;
+            StandardLevelDetailView standardLevelDetailView = levelDetailView._standardLevelDetailView;
             if (selectThisCharacteristic is null)
                 return;
 
             Plugin.Log.Debug(selectThisCharacteristic.serializedName);
             Plugin.Log.Debug(selectThisDifficulty.ToString());
 
-            BeatmapCharacteristicSegmentedControlController bCSCC = sLDV._beatmapCharacteristicSegmentedControlController;
-            IconSegmentedControl iSCC = bCSCC._segmentedControl;
-            int characteristicIndex = bCSCC._beatmapCharacteristics.IndexOf(selectThisCharacteristic);
+            BeatmapCharacteristicSegmentedControlController characteristControl = standardLevelDetailView._beatmapCharacteristicSegmentedControlController;
+            IconSegmentedControl iconControl = characteristControl._segmentedControl;
+            int characteristicIndex = characteristControl._beatmapCharacteristics.IndexOf(selectThisCharacteristic);
             if (characteristicIndex != -1)
             {
-                iSCC.SelectCellWithNumber(characteristicIndex);
-                bCSCC.HandleDifficultySegmentedControlDidSelectCell(iSCC, characteristicIndex);
-                BeatmapDifficultySegmentedControlController bDSCC = sLDV._beatmapDifficultySegmentedControlController;
-                List<BeatmapDifficulty> difficulties = bDSCC._difficulties;
+                iconControl.SelectCellWithNumber(characteristicIndex);
+                characteristControl.HandleBeatmapCharacteristicSegmentedControlDidSelectCell(iconControl, characteristicIndex);
+                BeatmapDifficultySegmentedControlController difficultyControl = standardLevelDetailView._beatmapDifficultySegmentedControlController;
+                List<BeatmapDifficulty> difficulties = difficultyControl._difficulties;
                 int difficultyIndex = difficulties.IndexOf(selectThisDifficulty);
                 if (difficultyIndex != -1)
                 {
-                    bDSCC._difficultySegmentedControl.SelectCellWithNumber(difficultyIndex);
-                    bDSCC.HandleDifficultySegmentedControlDidSelectCell(iSCC, difficultyIndex);
+                    difficultyControl._difficultySegmentedControl.SelectCellWithNumber(difficultyIndex);
+                    difficultyControl.HandleDifficultySegmentedControlDidSelectCell(iconControl, difficultyIndex);
                 }
             }
         }

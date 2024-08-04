@@ -1,6 +1,6 @@
 ﻿using BeatSaberMarkupLanguage.Attributes;
-using BeatSaberMarkupLanguage.Components;
 using BeatSaberMarkupLanguage.Parser;
+using BeatSaberMarkupLanguage.Util;
 using System;
 using System.Collections.Generic;
 using System.IO;

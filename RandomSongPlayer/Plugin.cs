@@ -1,19 +1,16 @@
-﻿using BeatSaberMarkupLanguage;
-using BeatSaverSharp;
+﻿using System;
+using System.Diagnostics;
+using System.Linq;
+using System.Net.Http;
+using UnityEngine;
 using IPA;
-using IPA.Config;
 using IPA.Config.Stores;
 using RandomSongPlayer.Configuration;
 using RandomSongPlayer.UI;
 using SongCore;
 using SongCore.Data;
+using BeatSaverSharp;
 using SongDetailsCache;
-using System;
-using System.Diagnostics;
-using System.Linq;
-using System.Net.Http;
-using System.Reflection;
-using UnityEngine;
 using IPALogger = IPA.Logging.Logger;
 
 namespace RandomSongPlayer
@@ -27,7 +24,7 @@ namespace RandomSongPlayer
         internal static HttpClient HttpClient { get; private set; }
         internal static BeatSaver BeatsaverClient { get; private set; }
         private static BeatSaverOptions BeatSaverConfig { get; set; }
-        internal static SeperateSongFolder RandomSongsFolder { get; private set; }
+        internal static SeparateSongFolder RandomSongsFolder { get; private set; }
         internal static SongDetails SongDetails { get; private set; }
         #endregion
 
@@ -63,7 +60,7 @@ namespace RandomSongPlayer
             if (RandomSongsFolder == null)
             {
                 Sprite rspLogo = SongCore.Utilities.Utils.LoadSpriteFromResources("RandomSongPlayer.Assets.rst-logo.png");
-                RandomSongsFolder = Collections.AddSeperateSongFolder("Random Songs", PluginConfig.Instance.SongFolderPath, FolderLevelPack.NewPack, rspLogo);
+                RandomSongsFolder = Collections.AddSeparateSongFolder("Random Songs", PluginConfig.Instance.SongFolderPath, FolderLevelPack.NewPack, rspLogo);
             }
             BS_Utils.Utilities.BSEvents.lateMenuSceneLoadedFresh += BSEvents_lateMenuSceneLoadedFresh;
             BS_Utils.Utilities.BSEvents.OnLoad();
@@ -81,11 +78,11 @@ namespace RandomSongPlayer
             BS_Utils.Utilities.BSEvents.lateMenuSceneLoadedFresh -= BSEvents_lateMenuSceneLoadedFresh;
             var levelFiltering = Resources.FindObjectsOfTypeAll<LevelFilteringNavigationController>().First();
             QuickButtonUI.instance.Setup();
-            levelFiltering.didSelectAnnotatedBeatmapLevelCollectionEvent -= OnMapPackChange;
-            levelFiltering.didSelectAnnotatedBeatmapLevelCollectionEvent += OnMapPackChange;
+            levelFiltering.didSelectBeatmapLevelPackEvent -= OnMapPackChange;
+            levelFiltering.didSelectBeatmapLevelPackEvent += OnMapPackChange;
         }
 
-        private void OnMapPackChange(LevelFilteringNavigationController levelFilteringNavigationController, IAnnotatedBeatmapLevelCollection iAnnotatedBeatmapLevelCollection, GameObject gameObject, BeatmapCharacteristicSO beatmapCharacteristicSO)
+        private void OnMapPackChange(LevelFilteringNavigationController levelFilter, BeatmapLevelPack levelPack, GameObject gameObject, LevelSelectionOptions options)
         {
             if (QuickButtonUI.instance == null)
                 return;
@@ -95,7 +92,6 @@ namespace RandomSongPlayer
                 return;
             }
 
-            IBeatmapLevelPack levelPack = iAnnotatedBeatmapLevelCollection as IBeatmapLevelPack;
             if (levelPack?.packName == "Random Songs")
                 QuickButtonUI.instance.Show();
             else

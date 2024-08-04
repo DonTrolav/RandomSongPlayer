@@ -75,7 +75,8 @@ namespace RandomSongPlayer
 
                     List<string> diffsToChooseFrom = chosenMap.diffs;
                     int diffCount = diffsToChooseFrom.Count();
-                    if (diffCount > 0) charDiff = diffsToChooseFrom[rnjesus.Next(diffCount)];
+                    if (diffCount > 0) 
+                        charDiff = diffsToChooseFrom[rnjesus.Next(diffCount)];
 
                     cacheList.RemoveAt(index);
 
