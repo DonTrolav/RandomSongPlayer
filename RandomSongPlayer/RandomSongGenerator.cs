@@ -102,7 +102,7 @@ namespace RandomSongPlayer
             IEnumerable<IGrouping<Song, SongDifficulty>> foundSongs = difficultiesToSearch.Where(x => difficultyFilter.CheckFilter(x)).GroupBy(x => x.song);
             Plugin.Log.Info($"Found songs: {foundSongs.Count()} (in {sw.ElapsedMilliseconds}ms)");
 
-            response.count = difficultiesToSearch.Count();
+            response.count = foundSongs.Count();
             foreach (var group in foundSongs)
             {
                 response.maps.Add(new FilteredMap
