@@ -7,7 +7,7 @@
         <dropdown-list-setting id='filterset-list' value='CurrentFilterSet' choices='FilterSetList' text='Current Filter Set' on-change='switch-filter' get-event='reload' min-width='60'></dropdown-list-setting>
         <vertical id='filterset-buttons' horizontal-fit='MinSize' child-expand-width='true' vertical-fit='MinSize' spacing='5'>
           <button id='button-newfilter' text='Create New' min-width='20' interactable='true' click-event='show-keyboard'></button>
-          <button id='button-delfilter' text='Delete' min-width='20' interactable='true' click-event='del-filter'></button>
+          <button id='button-delfilter' text='Delete' min-width='20' interactable='true' on-click='del-filter'></button>
         </vertical>
       </horizontal>
       <button id='random-button' text='Generate Random Map' interactable='false' on-click='find-map'></button>

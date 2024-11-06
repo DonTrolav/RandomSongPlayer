@@ -5,6 +5,8 @@ using UnityEngine.UI;
 using BeatSaberMarkupLanguage;
 using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.Util;
+using RandomSongPlayer.Configuration;
+using System.Xml.Serialization.Configuration;
 
 namespace RandomSongPlayer.UI
 {
@@ -15,13 +17,14 @@ namespace RandomSongPlayer.UI
 
         internal void Setup()
         {
-            var levelFiltering = Resources.FindObjectsOfTypeAll<LevelCollectionViewController>().First();
+            var levelFiltering = Resources.FindObjectsOfTypeAll<LevelFilteringNavigationController>().First();
+            //var levelFiltering = Resources.FindObjectsOfTypeAll<LevelCollectionNavigationController>().First();
             if (levelFiltering == null)
             {
                 Plugin.Log.Error("Could not find level list.");
                 return;
             }
-            BSMLParser.instance.Parse(Utilities.GetResourceContent(Assembly.GetExecutingAssembly(), "RandomSongPlayer.UI.QuickButton.bsml"), levelFiltering.gameObject, this);
+            BSMLParser.Instance.Parse(Utilities.GetResourceContent(Assembly.GetExecutingAssembly(), "RandomSongPlayer.UI.QuickButton.bsml"), levelFiltering.gameObject, this);
         }
 
         [UIAction("button-click")]
@@ -32,9 +35,22 @@ namespace RandomSongPlayer.UI
             button.interactable = true;
         }
 
+        [UIValue("buttonX")]
+        private float ButtonX { get { return PluginConfig.Instance.QuickButton.PositionX; } }
+
+        [UIValue("buttonY")]
+        private float ButtonY { get { return PluginConfig.Instance.QuickButton.PositionY; } }
+
+        [UIValue("buttonWidth")]
+        private float ButtonWidth { get { return PluginConfig.Instance.QuickButton.Width; } }
+
+        [UIValue("buttonHeight")]
+        private float ButtonHeight { get { return PluginConfig.Instance.QuickButton.Height; } }
+
         public void Show()
         {
             button.gameObject.SetActive(true);
+            //button.transform.position = new Vector2(ButtonX, ButtonY);
         }
 
         public void Hide()

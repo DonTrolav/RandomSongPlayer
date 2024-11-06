@@ -318,6 +318,7 @@ namespace RandomSongPlayer.UI
         [UIAction("del-filter")]
         private void DeleteFilterSet()
         {
+            Plugin.Log.Debug("Deleting current filterset");
             Filter.FilterHelper.DeleteCurrent();
         }
 

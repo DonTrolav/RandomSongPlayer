@@ -11,6 +11,7 @@ using SongCore;
 using SongCore.Data;
 using BeatSaverSharp;
 using SongDetailsCache;
+using BS_Utils.Utilities;
 using IPALogger = IPA.Logging.Logger;
 
 namespace RandomSongPlayer
@@ -35,7 +36,6 @@ namespace RandomSongPlayer
             Log = logger;
             Log?.Debug("Logger initialized.");
 
-            //Settings.Update();
             HttpClient = new HttpClient() { Timeout = TimeSpan.FromSeconds(2) };
             BeatSaverConfig = new BeatSaverOptions(applicationName: "RandomSongPlayer", version: new Version(2, 0, 0));
             BeatsaverClient = new BeatSaver(BeatSaverConfig);
@@ -48,7 +48,7 @@ namespace RandomSongPlayer
         [Init]
         public void InitWithConfig(IPA.Config.Config conf)
         {
-            Configuration.PluginConfig.Instance = conf.Generated<Configuration.PluginConfig>();
+            PluginConfig.Instance = conf.Generated<PluginConfig>();
             Log.Debug("Config loaded");
         }
 
@@ -56,26 +56,27 @@ namespace RandomSongPlayer
         public void OnEnable()
         {
             Filter.FilterHelper.Enable();
-            BeatSaberMarkupLanguage.GameplaySetup.GameplaySetup.instance.AddTab("RSP", "RandomSongPlayer.UI.FilterSettings.bsml", UI.FilterSettingsUI.instance);
-            if (RandomSongsFolder == null)
-            {
-                Sprite rspLogo = SongCore.Utilities.Utils.LoadSpriteFromResources("RandomSongPlayer.Assets.rst-logo.png");
-                RandomSongsFolder = Collections.AddSeparateSongFolder("Random Songs", PluginConfig.Instance.SongFolderPath, FolderLevelPack.NewPack, rspLogo);
-            }
-            BS_Utils.Utilities.BSEvents.lateMenuSceneLoadedFresh += BSEvents_lateMenuSceneLoadedFresh;
-            BS_Utils.Utilities.BSEvents.OnLoad();
+            BSEvents.lateMenuSceneLoadedFresh += BSEvents_lateMenuSceneLoadedFresh;
+            BSEvents.OnLoad();
         }
 
         [OnDisable]
         public void OnDisable()
         {
-            BeatSaberMarkupLanguage.GameplaySetup.GameplaySetup.instance.RemoveTab("RSP");
+            BeatSaberMarkupLanguage.GameplaySetup.GameplaySetup.Instance.RemoveTab("RSP");
             Filter.FilterHelper.Disable();
         }
 
         private void BSEvents_lateMenuSceneLoadedFresh(ScenesTransitionSetupDataSO sO)
         {
-            BS_Utils.Utilities.BSEvents.lateMenuSceneLoadedFresh -= BSEvents_lateMenuSceneLoadedFresh;
+            BeatSaberMarkupLanguage.GameplaySetup.GameplaySetup.Instance.AddTab("RSP", "RandomSongPlayer.UI.FilterSettings.bsml", UI.FilterSettingsUI.instance);
+            if (RandomSongsFolder == null)
+            {
+                Sprite rspLogo = SongCore.Utilities.Utils.LoadSpriteFromResources("RandomSongPlayer.Assets.rst-logo.png");
+                RandomSongsFolder = Collections.AddSeparateSongFolder("Random Songs", PluginConfig.Instance.SongFolderPath, FolderLevelPack.NewPack, rspLogo);
+            }
+
+            BSEvents.lateMenuSceneLoadedFresh -= BSEvents_lateMenuSceneLoadedFresh;
             var levelFiltering = Resources.FindObjectsOfTypeAll<LevelFilteringNavigationController>().First();
             QuickButtonUI.instance.Setup();
             levelFiltering.didSelectBeatmapLevelPackEvent -= OnMapPackChange;
@@ -86,16 +87,22 @@ namespace RandomSongPlayer
         {
             if (QuickButtonUI.instance == null)
                 return;
-            if (!PluginConfig.Instance.ShowQuickButton)
-            {
-                QuickButtonUI.instance.Hide();
-                return;
-            }
 
-            if (levelPack?.packName == "Random Songs")
-                QuickButtonUI.instance.Show();
-            else
-                QuickButtonUI.instance.Hide();
+            switch (PluginConfig.Instance.QuickButton.ShowMode)
+            {
+                case ShowMode.Never:
+                    QuickButtonUI.instance.Hide();
+                    break;
+                case ShowMode.OnRandomPack:
+                    if (levelPack?.packName == "Random Songs")
+                        QuickButtonUI.instance.Show();
+                    else
+                        QuickButtonUI.instance.Hide();
+                    break;
+                case ShowMode.Always:
+                    QuickButtonUI.instance.Show();
+                    break;
+            }
         }
     }
 }

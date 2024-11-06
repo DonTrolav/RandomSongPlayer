@@ -12,7 +12,8 @@ namespace RandomSongPlayer.Configuration
         public virtual string SongFolderPath { get; set; } = Path.Combine(Environment.CurrentDirectory, "Beat Saber_Data", "Random Songs");
         public virtual string FiltersPath { get; set; } = Path.Combine(Environment.CurrentDirectory, "UserData", "RandomSongFilters");
         public virtual string FilterServerAddress { get; set; } = "https://rsp.bs.qwasyx3000.com/random_maps";
-        public virtual bool ShowQuickButton { get; set; } = false;
+        public virtual QuickButtonConfig QuickButton { get; set; } = new QuickButtonConfig();
+
 
         /// <summary>
         /// This is called whenever BSIPA reads the config from disk (including when file changes are detected).

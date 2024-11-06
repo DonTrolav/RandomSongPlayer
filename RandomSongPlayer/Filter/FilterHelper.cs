@@ -163,9 +163,15 @@ namespace RandomSongPlayer.Filter
 
         internal static void Delete(string filterName)
         {
+            Plugin.Log.Debug($"Trying to delete filter {filterName}");
+
             string filterPath = Path.Combine(PluginConfig.Instance.FiltersPath, filterName + FILTER_EXTENSION);
-            if (File.Exists(filterPath)) File.Delete(filterPath);
-            else filterSets.Remove(filterName);
+            Plugin.Log.Debug($"Path to filter {filterPath}");
+
+            if (File.Exists(filterPath))
+                File.Delete(filterPath);
+            else
+                filterSets.Remove(filterName);
         }
         #endregion
 
