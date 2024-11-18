@@ -30,9 +30,7 @@ namespace RandomSongPlayer.UI
         [UIAction("button-click")]
         async internal void RandomLevelButtonClick()
         {
-            button.interactable = false;
-            await MapSelector.SelectRandomSongAsync();
-            button.interactable = true;
+            await FilterSettingsUI.instance.GenerateMap();
         }
 
         [UIValue("buttonX")]

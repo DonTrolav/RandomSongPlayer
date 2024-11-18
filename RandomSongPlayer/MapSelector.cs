@@ -16,7 +16,7 @@ namespace RandomSongPlayer
         private static BeatmapDifficulty selectThisDifficulty = BeatmapDifficulty.Easy;
         private static BeatmapLevel beatmapCheck = null;
 
-        private delegate bool RSPDownloadedCallback(BeatmapLevel chosenSong, string chosenCharDiff);
+        private delegate void RSPDownloadedCallback(BeatmapLevel chosenSong, string chosenCharDiff);
 
         private static async Task DownloadRandomSongAsync(RSPDownloadedCallback callback)
         {
@@ -36,7 +36,6 @@ namespace RandomSongPlayer
             Plugin.Log.Info("-> Char / Diff: " + charDiff);
 
             path = Path.GetFullPath(path);
-            bool? songSelected = null;
 
             if (freshDownload)
             {
@@ -44,7 +43,7 @@ namespace RandomSongPlayer
                 {
                     Loader.OnLevelPacksRefreshed -= OnLevelPacksRefreshed;
                     BeatmapLevel installedMap = Plugin.RandomSongsFolder.Levels[path];
-                    songSelected = callback?.Invoke(installedMap, charDiff);
+                    callback?.Invoke(installedMap, charDiff);
                 }
 
                 Loader.OnLevelPacksRefreshed += OnLevelPacksRefreshed;
@@ -53,13 +52,7 @@ namespace RandomSongPlayer
             else
             {
                 BeatmapLevel installedMap = Plugin.RandomSongsFolder.Levels[path];
-                songSelected = callback?.Invoke(installedMap, charDiff);
-            }
-
-            if (songSelected is null || songSelected == false)
-            {
-                Plugin.Log.Info("Could not select the song. Maybe SongLoader did not finish loading level packs.");
-                FilterSettingsUI.instance.ChangeWarning("Could not select the map. Check if the level packs finished loading.", FilterSettingsUI.COLOR_ORANGE);
+                callback?.Invoke(installedMap, charDiff);
             }
         }
 
@@ -68,10 +61,10 @@ namespace RandomSongPlayer
             await DownloadRandomSongAsync(SelectBeatmap);
         }
 
-        private static bool SelectBeatmap(BeatmapLevel installedMap, string charDiff)
+        private static void SelectBeatmap(BeatmapLevel installedMap, string charDiff)
         {
             if (Plugin.RandomSongsFolder?.LevelPack is null)
-                return false;
+                return;
 
             int installedLevelIndex = Plugin.RandomSongsFolder.LevelPack.AllBeatmapLevels().Select((item, index) => new { item, index }).FirstOrDefault(x => x.item.levelID == installedMap.levelID).index;
             Plugin.Log.Debug($"Installed Level Index: {installedLevelIndex}");
@@ -99,7 +92,6 @@ namespace RandomSongPlayer
 
             LevelCollectionTableView levelCollectionTable = Resources.FindObjectsOfTypeAll<LevelCollectionTableView>().First();
             levelCollectionTable.SelectLevel(installedMap);
-            return true;
         }
 
         private static void DismissPracticeView()

@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 
@@ -323,14 +324,24 @@ namespace RandomSongPlayer.UI
         }
 
         [UIAction("find-map")]
-        private async void FindMap()
+        internal async void FindMap()
+        {
+            await GenerateMap();
+        }
+
+        internal async Task GenerateMap()
         {
             findMapButton.interactable = false;
+            QuickButtonUI.instance.button.interactable = false;
+
             await MapSelector.SelectRandomSongAsync();
-            if (RandomSongGenerator.InitialCache is null)
+            if (Plugin.RandomSongsFolder?.LevelPack is null)
+            {
+                ChangeWarning("Wait for SongCore to finish loading level packs!", FilterSettingsUI.COLOR_ORANGE);
+            }
+            else if (RandomSongGenerator.InitialCache is null)
             {
                 ChangeWarning("Something went wrong!", COLOR_RED);
-                findMapButton.interactable = true;
             }
             else if (RandomSongGenerator.InitialCache.count == 0)
             {
@@ -339,13 +350,14 @@ namespace RandomSongPlayer.UI
             else if (RandomSongGenerator.AllMapsInCache && RandomSongGenerator.CurrentCache.Count == 0)
             {
                 ChangeWarning("All maps with this filter have been used.", COLOR_YELLOW);
-                findMapButton.interactable = true;
             }
             else
             {
                 ChangeWarning("", COLOR_WHITE);
-                findMapButton.interactable = true;
             }
+
+            findMapButton.interactable = true;
+            QuickButtonUI.instance.button.interactable = true;
         }
 
         internal void ChangeWarning(string text, Color color)
