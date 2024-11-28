@@ -71,7 +71,7 @@ namespace RandomSongPlayer.Filter
             if (hasModsEnabled) hasMods = filterSet["diffHasMods"].AsArray.Children.Select(x => ParseMod(x.Value));
             minNotesEnabled = filterSet["diffMinNotes"] != null && uint.TryParse(filterSet["diffMinNotes"], out minNotes);
             maxNotesEnabled = filterSet["diffMaxNotes"] != null && uint.TryParse(filterSet["diffMaxNotes"], out maxNotes);
-            minNPSEnabled = filterSet["minNdiffMinNPSPS"] != null && float.TryParse(filterSet["diffMinNPS"], out minNPS);
+            minNPSEnabled = filterSet["diffMinNPS"] != null && float.TryParse(filterSet["diffMinNPS"], out minNPS);
             maxNPSEnabled = filterSet["diffMaxNPS"] != null && float.TryParse(filterSet["diffMaxNPS"], out maxNPS);
             minBombsEnabled = filterSet["diffMinBombs"] != null && uint.TryParse(filterSet["diffMinBombs"], out minBombs);
             maxBombsEnabled = filterSet["diffMaxBombs"] != null && uint.TryParse(filterSet["diffMaxBombs"], out maxBombs);
