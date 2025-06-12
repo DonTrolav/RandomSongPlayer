@@ -4,7 +4,6 @@ A plugin for Beat Saber that downloads a random song from BeatSaver and plays it
 ## How to install
 Install all required mods from BSManager:
 - BSIPA
-- BS Utils
 - SongCore
 - BeatSaberMarkupLanguage
 - BeatSaverSharp
