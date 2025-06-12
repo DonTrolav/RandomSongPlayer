@@ -66,11 +66,6 @@
       <HintPath>$(GameDirectory)\Plugins\BSML.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>
     </Reference>
-    <Reference Include="BS_Utils, Version=1.13.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <Private>False</Private>
-      <HintPath>$(GameDirectory)\Plugins\BS_Utils.dll</HintPath>
-      <SpecificVersion>False</SpecificVersion>
-    </Reference>
     <Reference Include="DataModels">
       <HintPath>$(GameDirectory)\Beat Saber_Data\Managed\DataModels.dll</HintPath>
       <Private>False</Private>
