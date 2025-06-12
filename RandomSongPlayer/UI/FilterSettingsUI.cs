@@ -1,4 +1,5 @@
 ﻿using BeatSaberMarkupLanguage.Attributes;
+using BeatSaberMarkupLanguage.GameplaySetup;
 using BeatSaberMarkupLanguage.Parser;
 using BeatSaberMarkupLanguage.Util;
 using System;
@@ -22,6 +23,11 @@ namespace RandomSongPlayer.UI
 
         [UIParams]
         private BSMLParserParams parserParams;
+
+        public static void Init()
+        {
+            GameplaySetup.Instance.AddTab("RSP", "RandomSongPlayer.UI.FilterSettings.bsml", instance);
+        }
 
         #region HelperFunctions
         private bool GetCharHelper(string name)

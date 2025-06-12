@@ -11,8 +11,8 @@ using SongCore;
 using SongCore.Data;
 using BeatSaverSharp;
 using SongDetailsCache;
-using BS_Utils.Utilities;
 using IPALogger = IPA.Logging.Logger;
+using BeatSaberMarkupLanguage.Util;
 
 namespace RandomSongPlayer
 {
@@ -37,7 +37,7 @@ namespace RandomSongPlayer
             Log?.Debug("Logger initialized.");
 
             HttpClient = new HttpClient() { Timeout = TimeSpan.FromSeconds(2) };
-            BeatSaverConfig = new BeatSaverOptions(applicationName: "RandomSongPlayer", version: new Version(2, 0, 0));
+            BeatSaverConfig = new BeatSaverOptions(applicationName: "RandomSongPlayer", version: new Version(2, 0, 3));
             BeatsaverClient = new BeatSaver(BeatSaverConfig);
 
             Stopwatch sw = Stopwatch.StartNew();
@@ -52,57 +52,30 @@ namespace RandomSongPlayer
             Log.Debug("Config loaded");
         }
 
+        [OnStart]
+        public void OnApplicationStart()
+        {
+            MainMenuAwaiter.MainMenuInitializing += delegate {
+                FilterSettingsUI.Init();
+                QuickButtonUI.Init();
+                if (RandomSongsFolder == null)
+                {
+                    Sprite rspLogo = SongCore.Utilities.Utils.LoadSpriteFromResources("RandomSongPlayer.Assets.rst-logo.png");
+                    RandomSongsFolder = Collections.AddSeparateSongFolder("Random Songs", PluginConfig.Instance.SongFolderPath, FolderLevelPack.NewPack, rspLogo);
+                }
+            };
+        }
+
         [OnEnable]
         public void OnEnable()
         {
             Filter.FilterHelper.Enable();
-            BSEvents.lateMenuSceneLoadedFresh += BSEvents_lateMenuSceneLoadedFresh;
-            BSEvents.OnLoad();
         }
 
         [OnDisable]
         public void OnDisable()
         {
-            BeatSaberMarkupLanguage.GameplaySetup.GameplaySetup.Instance.RemoveTab("RSP");
             Filter.FilterHelper.Disable();
-        }
-
-        private void BSEvents_lateMenuSceneLoadedFresh(ScenesTransitionSetupDataSO sO)
-        {
-            BeatSaberMarkupLanguage.GameplaySetup.GameplaySetup.Instance.AddTab("RSP", "RandomSongPlayer.UI.FilterSettings.bsml", UI.FilterSettingsUI.instance);
-            if (RandomSongsFolder == null)
-            {
-                Sprite rspLogo = SongCore.Utilities.Utils.LoadSpriteFromResources("RandomSongPlayer.Assets.rst-logo.png");
-                RandomSongsFolder = Collections.AddSeparateSongFolder("Random Songs", PluginConfig.Instance.SongFolderPath, FolderLevelPack.NewPack, rspLogo);
-            }
-
-            BSEvents.lateMenuSceneLoadedFresh -= BSEvents_lateMenuSceneLoadedFresh;
-            var levelFiltering = Resources.FindObjectsOfTypeAll<LevelFilteringNavigationController>().First();
-            QuickButtonUI.instance.Setup();
-            levelFiltering.didSelectBeatmapLevelPackEvent -= OnMapPackChange;
-            levelFiltering.didSelectBeatmapLevelPackEvent += OnMapPackChange;
-        }
-
-        private void OnMapPackChange(LevelFilteringNavigationController levelFilter, BeatmapLevelPack levelPack, GameObject gameObject, LevelSelectionOptions options)
-        {
-            if (QuickButtonUI.instance == null)
-                return;
-
-            switch (PluginConfig.Instance.QuickButton.ShowMode)
-            {
-                case ShowMode.Never:
-                    QuickButtonUI.instance.Hide();
-                    break;
-                case ShowMode.OnRandomPack:
-                    if (levelPack?.packName == "Random Songs")
-                        QuickButtonUI.instance.Show();
-                    else
-                        QuickButtonUI.instance.Hide();
-                    break;
-                case ShowMode.Always:
-                    QuickButtonUI.instance.Show();
-                    break;
-            }
         }
     }
 }

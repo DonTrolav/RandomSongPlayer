@@ -6,7 +6,6 @@ using BeatSaberMarkupLanguage;
 using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.Util;
 using RandomSongPlayer.Configuration;
-using System.Xml.Serialization.Configuration;
 
 namespace RandomSongPlayer.UI
 {
@@ -15,16 +14,17 @@ namespace RandomSongPlayer.UI
         [UIComponent("quick-button")]
         internal Button button;
 
-        internal void Setup()
+        public static void Init()
         {
             var levelFiltering = Resources.FindObjectsOfTypeAll<LevelFilteringNavigationController>().First();
-            //var levelFiltering = Resources.FindObjectsOfTypeAll<LevelCollectionNavigationController>().First();
             if (levelFiltering == null)
             {
                 Plugin.Log.Error("Could not find level list.");
                 return;
             }
-            BSMLParser.Instance.Parse(Utilities.GetResourceContent(Assembly.GetExecutingAssembly(), "RandomSongPlayer.UI.QuickButton.bsml"), levelFiltering.gameObject, this);
+            BSMLParser.Instance.Parse(Utilities.GetResourceContent(Assembly.GetExecutingAssembly(), "RandomSongPlayer.UI.QuickButton.bsml"), levelFiltering.gameObject, instance);
+            levelFiltering.didSelectBeatmapLevelPackEvent -= OnMapPackChange;
+            levelFiltering.didSelectBeatmapLevelPackEvent += OnMapPackChange;
         }
 
         [UIAction("button-click")]
@@ -44,6 +44,28 @@ namespace RandomSongPlayer.UI
 
         [UIValue("buttonHeight")]
         private float ButtonHeight { get { return PluginConfig.Instance.QuickButton.Height; } }
+
+        private static void OnMapPackChange(LevelFilteringNavigationController levelFilter, BeatmapLevelPack levelPack, GameObject gameObject, LevelSelectionOptions options)
+        {
+            if (instance == null)
+                return;
+
+            switch (PluginConfig.Instance.QuickButton.ShowMode)
+            {
+                case ShowMode.Never:
+                    instance.Hide();
+                    break;
+                case ShowMode.OnRandomPack:
+                    if (levelPack?.packName == "Random Songs")
+                        instance.Show();
+                    else
+                        instance.Hide();
+                    break;
+                case ShowMode.Always:
+                    instance.Show();
+                    break;
+            }
+        }
 
         public void Show()
         {
