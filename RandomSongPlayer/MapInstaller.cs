@@ -19,13 +19,12 @@ namespace RandomSongPlayer
         {
             foreach (var level in Plugin.RandomSongsFolder.Levels)
             {
-                if (mapData.LatestVersion.Hash.ToLower() == SongCore.Collections.hashForLevelID(level.Value.levelID).ToLower())
+                if (mapData.LatestVersion.Hash.Equals(SongCore.Collections.GetCustomLevelHash(level.Value.levelID), StringComparison.OrdinalIgnoreCase))
                 {
                     Plugin.Log.Debug("Skipping download of map " + mapData.LatestVersion.Key + " since we already have it");
                     return (false, level.Key);
                 }
             }
-
 
             byte[] zipData = await DownloadMap(mapData);
             if (!(zipData is null))
